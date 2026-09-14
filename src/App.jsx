@@ -66,6 +66,7 @@ entreno-panel{
   box-sizing: border-box;
 }
 entreno-panel > .e-host{ height:100%; }
+entreno-panel.e-card-mode{ height:calc(100vh - var(--header-height, 56px)); height:calc(100dvh - var(--header-height, 56px)); border-radius:0; }
 .e-topbar{ display:flex; align-items:center; gap:8px; height:48px; padding:0 8px; border-bottom:1px solid var(--e-div); background:var(--e-card); }
 .e-topbar b{ font-size:15px; }
 entreno-panel *, entreno-panel *::before, entreno-panel *::after{ box-sizing:border-box; }
@@ -1143,6 +1144,8 @@ const ha = {
   hass: null,
   narrow: false,
   inHA: false,
+  cardMode: false,
+  cardConfig: null,
   _listeners: new Set(),
   _watched: [],
   _sig: "",
@@ -1442,6 +1445,29 @@ function StoreProvider({ children }) {
         }
         const n = normalize(raw);
         if (!raw.programs?.length) await db.putMany("programs", n.programs);
+        // Entidades por defecto desde la configuración de la tarjeta (solo la primera vez).
+        const cc = ha.cardConfig;
+        if (cc && !n.settings.haDefaultsApplied) {
+          const H = n.settings.ha;
+          const pick = (v) => (typeof v === "string" ? v : "");
+          n.settings = {
+            ...n.settings, haDefaultsApplied: true,
+            ha: {
+              ...H, enabled: cc.enabled !== false,
+              scaleEntity: pick(cc.scale_entity) || H.scaleEntity, stepsEntity: pick(cc.steps_entity) || H.stepsEntity,
+              calendarEntity: pick(cc.calendar_entity) || H.calendarEntity, todoEntity: pick(cc.todo_entity) || H.todoEntity,
+              notifyService: pick(cc.notify_service) || H.notifyService, notifyOnRest: cc.notify_on_rest ?? H.notifyOnRest,
+              ttsService: pick(cc.tts_service) || H.ttsService, ttsEntity: pick(cc.tts_entity) || H.ttsEntity, mediaPlayerEntity: pick(cc.media_player_entity) || H.mediaPlayerEntity,
+              sceneStart: pick(cc.scene_start) || H.sceneStart, sceneEnd: pick(cc.scene_end) || H.sceneEnd,
+              helpers: {
+                weeklyVolume: pick(cc.helper_weekly_volume) || H.helpers.weeklyVolume, weeklySessions: pick(cc.helper_weekly_sessions) || H.helpers.weeklySessions,
+                adherence: pick(cc.helper_adherence) || H.helpers.adherence, dayTonnage: pick(cc.helper_day_tonnage) || H.helpers.dayTonnage,
+                proteinLeft: pick(cc.helper_protein_left) || H.helpers.proteinLeft,
+              },
+            },
+          };
+          await db.put("settings", n.settings);
+        }
         setData(n);
       } catch (e) { setError(e); }
     })();
@@ -3502,7 +3528,7 @@ function App() {
   return (
     <NavCtx.Provider value={{ ...nav, go }}>
       <div className="e-app">
-        {ha.inHA && ha.narrow && (
+        {ha.inHA && ha.narrow && !ha.cardMode && (
           <div className="e-topbar">
             <IconBtn icon={Menu} label="Menú de Home Assistant" onClick={(e) => e.currentTarget.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }))} />
             <b>Entreno</b>
@@ -3539,6 +3565,17 @@ function Root() {
  * Home Assistant asigna hass, narrow, route y panel. Fuera de HA, hass es nulo.
  * ========================================================================== */
 class EntrenoPanel extends HTMLElement {
+  // Modo tarjeta de dashboard (type: custom:entreno-panel). La configuración de la
+  // tarjeta puede traer entidades por defecto para la integración; se aplican una
+  // sola vez, la primera vez que arranca la app, y después mandan los Ajustes.
+  setConfig(config) {
+    this._config = config || {};
+    ha.cardConfig = this._config;
+    ha.cardMode = true;
+    this.classList.add("e-card-mode");
+  }
+  getCardSize() { return 12; }
+  static getStubConfig() { return {}; }
   set hass(v) { this._hass = v; ha.setHass(v || null); }
   get hass() { return this._hass; }
   set narrow(v) { this._narrow = v; ha.narrow = !!v; ha._listeners.forEach((fn) => fn()); }
