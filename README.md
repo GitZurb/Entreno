@@ -25,9 +25,10 @@ Sin dependencias de CDN en tiempo de ejecución: Preact, los iconos y las gráfi
 ## Fase 1 · aplicación autónoma
 
 Abre `dist/index.html`. Los datos viven en IndexedDB del navegador (exportación e
-importación JSON completa en Ajustes → Datos). Arranca con datos de ejemplo:
-57 ejercicios, tres plantillas de rutina, tres sesiones históricas, un día de
-comidas y 30 días de peso. Fuera de Home Assistant `hass` es nulo y la
+importación JSON completa en Ajustes → Datos). Arranca vacío de registros: solo
+trae material de referencia (60 ejercicios con técnica e ilustración, tres
+plantillas de rutina, una tabla de alimentos y el programa de 26 semanas). Las
+sesiones, las comidas, el peso y las recetas los creas tú. Fuera de Home Assistant `hass` es nulo y la
 integración queda inactiva; la pantalla de Ajustes → Home Assistant ya está
 construida y se rellena con entidades reales cuando el panel corre dentro de HA.
 

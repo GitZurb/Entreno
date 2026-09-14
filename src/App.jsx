@@ -829,10 +829,7 @@ const SEED_FOODS = [
   F("chocolate_85", "Chocolate negro 85 %", "unit", 60, 1, 2, 5, "onza 10 g"),
   F("cafe_leche", "Café con leche desnatada", "unit", 40, 3.5, 5, 0.1, "taza 200 ml"),
 ];
-const SEED_RECIPES = [
-  { id: "rc_avena", name: "Bol de avena con proteína", servings: 1, items: [{ foodId: "avena", qty: 60 }, { foodId: "leche_desnatada", qty: 250 }, { foodId: "whey", qty: 1 }, { foodId: "platano", qty: 1 }] },
-  { id: "rc_pollo_arroz", name: "Pollo con arroz y brócoli", servings: 1, items: [{ foodId: "pollo", qty: 200 }, { foodId: "arroz", qty: 250 }, { foodId: "brocoli", qty: 150 }, { foodId: "aceite", qty: 10 }] },
-];
+const SEED_RECIPES = []; // las recetas las guardas tú
 
 const DEFAULT_SETTINGS = {
   key: "app",
@@ -849,7 +846,7 @@ const DEFAULT_SETTINGS = {
     sceneStart: "", sceneEnd: "",
     helpers: { weeklyVolume: "", weeklySessions: "", adherence: "", dayTonnage: "", proteinLeft: "" },
   },
-  seeded: true,
+  seeded: true, demoPurged: true,
 };
 const DEFAULT_INVENTORY = {
   key: "main",
@@ -858,70 +855,6 @@ const DEFAULT_INVENTORY = {
   kettlebells: [{ kg: 10, count: 1 }],
   bench: { incline: true, decline: true },
 };
-
-// Sesiones históricas de ejemplo (fechas relativas a hoy).
-function seedSessions() {
-  const t = todayISO();
-  const S = (kg, reps, rir, pr = false) => ({ kg, reps, rir, done: true, pr });
-  const mk = (id, date, dayIndex, dayName, startH, mins, exercises) => ({
-    id, date, routineId: "rt_torso_pierna", dayIndex, dayName,
-    startedAt: new Date(parseISO(date).getTime() + startH * 3600e3).toISOString(),
-    finishedAt: new Date(parseISO(date).getTime() + startH * 3600e3 + mins * 60e3).toISOString(),
-    exercises, mounted: { barbell: null, dumbbells: null }, note: "",
-  });
-  return [
-    mk("ss_seed_1", addDays(t, -9), 0, "Torso A", 18, 62, [
-      { exerciseId: "press_banca", restSec: 150, sets: [S(50, 8, 2), S(50, 8, 2), S(50, 7, 1), S(50, 7, 1)] },
-      { exerciseId: "remo_barra", restSec: 120, sets: [S(46, 8, 2), S(46, 8, 2), S(46, 8, 1), S(46, 7, 1)] },
-      { exerciseId: "press_hombro_mancuernas", restSec: 120, sets: [S(15, 10, 2), S(15, 10, 2), S(15, 9, 1)] },
-      { exerciseId: "remo_mancuerna", restSec: 90, sets: [S(22, 10, 2), S(22, 10, 2), S(22, 10, 1)] },
-      { exerciseId: "curl_barra", restSec: 75, sets: [S(26, 10, 2), S(26, 10, 1), S(26, 9, 0)] },
-      { exerciseId: "press_frances", restSec: 90, sets: [S(23, 12, 2), S(23, 11, 1), S(23, 10, 1)] },
-    ]),
-    mk("ss_seed_2", addDays(t, -7), 1, "Pierna A", 18, 66, [
-      { exerciseId: "sentadilla_frontal", restSec: 180, sets: [S(50, 8, 2), S(50, 8, 2), S(50, 8, 1), S(50, 7, 1)] },
-      { exerciseId: "peso_muerto_rumano", restSec: 150, sets: [S(60, 10, 2), S(60, 10, 2), S(60, 9, 1)] },
-      { exerciseId: "sentadilla_bulgara", restSec: 120, sets: [S(12, 10, 2), S(12, 10, 2), S(12, 10, 1)] },
-      { exerciseId: "hip_thrust", restSec: 120, sets: [S(66, 12, 2), S(66, 12, 2), S(66, 11, 1)] },
-      { exerciseId: "gemelo_pie", restSec: 60, sets: [S(15, 15, 2), S(15, 15, 2), S(15, 14, 1), S(15, 12, 0)] },
-      { exerciseId: "plancha", restSec: 60, sets: [S(0, 45, 2), S(0, 45, 1), S(0, 40, 0)] },
-    ]),
-    mk("ss_seed_3", addDays(t, -2), 0, "Torso A", 18, 60, [
-      { exerciseId: "press_banca", restSec: 150, sets: [S(50, 8, 2), S(50, 8, 2), S(50, 8, 1), S(50, 8, 1, true)] },
-      { exerciseId: "remo_barra", restSec: 120, sets: [S(46, 8, 2), S(46, 8, 2), S(46, 8, 1), S(46, 8, 1)] },
-      { exerciseId: "press_hombro_mancuernas", restSec: 120, sets: [S(15, 11, 2), S(15, 10, 1), S(15, 10, 1)] },
-      { exerciseId: "remo_mancuerna", restSec: 90, sets: [S(22, 12, 2), S(22, 11, 1), S(22, 10, 1)] },
-      { exerciseId: "curl_barra", restSec: 75, sets: [S(26, 11, 2), S(26, 10, 1), S(26, 10, 0)] },
-      { exerciseId: "press_frances", restSec: 90, sets: [S(23, 12, 2), S(23, 12, 1), S(23, 11, 1)] },
-    ]),
-  ];
-}
-function seedDiary() {
-  const t = todayISO();
-  return [{
-    date: t,
-    meals: {
-      desayuno: [{ recipeId: "rc_avena", qty: 1 }, { foodId: "cafe_leche", qty: 1 }],
-      comida: [{ recipeId: "rc_pollo_arroz", qty: 1 }],
-      cena: [{ foodId: "merluza", qty: 200 }, { foodId: "ensalada", qty: 150 }, { foodId: "aceite", qty: 8 }, { foodId: "pan_integral", qty: 1 }],
-      snacks: [{ foodId: "yogur_griego", qty: 1 }, { foodId: "manzana", qty: 1 }],
-    },
-    waterMl: 1500,
-  }];
-}
-function seedBodyweight() {
-  const t = todayISO();
-  const out = [];
-  let seed = 7;
-  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-  for (let i = 30; i >= 0; i--) {
-    if (i % 5 === 3) continue; // días sin pesarse
-    const base = 117.9 - (30 - i) * 0.06;
-    out.push({ date: addDays(t, -i), kg: r1(base + (rnd() - 0.5) * 0.9), source: "manual" });
-  }
-  out[out.length - 1].kg = 116.0;
-  return out;
-}
 
 /* =============================================================================
  * CÁLCULO DE CARGAS MONTABLES
@@ -1403,11 +1336,14 @@ const ToastCtx = createContext(() => {});
 const useStore = () => useContext(StoreCtx);
 const useToast = () => useContext(ToastCtx);
 
+// Contenido inicial: solo material de referencia (biblioteca de ejercicios,
+// plantillas de rutina, tabla de alimentos y el programa de 26 semanas).
+// Ningún registro: las sesiones, las comidas, el peso y las recetas son tuyos.
 function buildSeed() {
   return {
     settings: [DEFAULT_SETTINGS], inventory: [DEFAULT_INVENTORY], exercises: SEED_EXERCISES,
-    routines: SEED_ROUTINES, sessions: seedSessions(), foods: SEED_FOODS, recipes: SEED_RECIPES,
-    diary: seedDiary(), bodyweight: seedBodyweight(), haQueue: [], programs: [SEED_PROGRAM],
+    routines: SEED_ROUTINES, sessions: [], foods: SEED_FOODS, recipes: SEED_RECIPES,
+    diary: [], bodyweight: [], haQueue: [], programs: [SEED_PROGRAM],
   };
 }
 function normalize(raw) {
@@ -1441,6 +1377,23 @@ function StoreProvider({ children }) {
         }
         const n = normalize(raw);
         if (!raw.programs?.length) await db.putMany("programs", n.programs);
+        // Limpieza única: las primeras versiones precargaban sesiones, un día de
+        // comidas, dos recetas y un mes de peso inventados. Se borran una sola vez.
+        if (!n.settings.demoPurged) {
+          const demoRecipes = ["rc_avena", "rc_pollo_arroz"];
+          const isDemoDiary = (d) => Object.values(d.meals || {}).flat().some((e) => demoRecipes.includes(e.recipeId));
+          for (const ss of n.sessions) if (ss.id.startsWith("ss_seed_")) await db.del("sessions", ss.id);
+          for (const rc of n.recipes) if (demoRecipes.includes(rc.id)) await db.del("recipes", rc.id);
+          for (const d of n.diary) if (isDemoDiary(d)) await db.del("diary", d.date);
+          // El peso real viene de la báscula; los registros manuales precargados se van.
+          for (const bw of n.bodyweight) if (bw.source === "manual") await db.del("bodyweight", bw.date);
+          n.sessions = n.sessions.filter((x) => !x.id.startsWith("ss_seed_"));
+          n.recipes = n.recipes.filter((x) => !demoRecipes.includes(x.id));
+          n.diary = n.diary.filter((d) => !isDemoDiary(d));
+          n.bodyweight = n.bodyweight.filter((x) => x.source !== "manual");
+          n.settings = { ...n.settings, demoPurged: true };
+          await db.put("settings", n.settings);
+        }
         // Entidades por defecto desde la configuración de la tarjeta (solo la primera vez).
         const cc = ha.cardConfig;
         if (cc && !n.settings.haDefaultsApplied) {
@@ -3310,8 +3263,15 @@ function TodayScreen() {
         <Card title="Peso corporal" action={<span className="e-muted">{last?.source === "ha" ? "báscula HA" : last ? "manual" : ""}</span>}>
           <div className="e-row between">
             <div className="e-stack">
-              <div className="e-hero"><span className="e-big md">{last ? fmtKg(last.kg) : "–"}</span><span className="e-unit">kg</span></div>
-              <WeightTrend series={series} />
+              {last ? (<>
+                <div className="e-hero"><span className="e-big md">{fmtKg(last.kg)}</span><span className="e-unit">kg</span></div>
+                <WeightTrend series={series} />
+              </>) : (
+                <div className="e-stack">
+                  <span style={{ fontSize: 15 }}>Sin registros de peso</span>
+                  <button className="e-btn xs soft" style={{ alignSelf: "flex-start" }} onClick={() => nav.go("progreso")}>Registrar peso</button>
+                </div>
+              )}
             </div>
             {spark.length > 1 && (
               <Sparkline data={spark} series={[{ key: "kg", color: "var(--e-text2)", width: 1, opacity: 0.6 }, { key: "ma", color: "var(--e-acc)", width: 2 }]} />
@@ -3389,12 +3349,12 @@ function SettingsScreen() {
     } catch (e) { toast(`No se pudo importar: ${e.message}`, "err"); }
   };
   const onFile = (e) => { const f = e.target.files?.[0]; if (!f) return; f.text().then(doImport); e.target.value = ""; };
-  const resetSeed = async () => {
-    if (!window.confirm("Se borrará todo y se cargarán los datos de ejemplo. ¿Continuar?")) return;
-    await store.replaceAll(buildSeed()); toast("Datos de ejemplo restaurados", "ok");
+  const resetAll = async () => {
+    if (!window.confirm("Empezar de cero: se borran tus sesiones, comidas, peso, recetas y ajustes, y vuelven la biblioteca de ejercicios, las plantillas, la tabla de alimentos y el programa. ¿Continuar?")) return;
+    await store.replaceAll(buildSeed()); toast("Todo a cero", "ok");
   };
   const wipe = async () => {
-    if (!window.confirm("Se borrarán todas las sesiones, el diario y el peso. Se conservan ejercicios, rutinas, alimentos, inventario y ajustes. ¿Continuar?")) return;
+    if (!window.confirm("Se borran las sesiones, el diario de comidas y los registros de peso. Se conservan la biblioteca, las rutinas, el programa, los alimentos, las recetas, el inventario y los ajustes. ¿Continuar?")) return;
     await store.replaceAll({ settings: [s], inventory: [inv], exercises: data.exercises, routines: data.routines, foods: data.foods, recipes: data.recipes, sessions: [], diary: [], bodyweight: [], haQueue: [] });
     toast("Historial borrado", "ok");
   };
@@ -3508,7 +3468,7 @@ function SettingsScreen() {
       </Card>
 
       <Card title="Datos">
-        <p className="e-muted">Todo vive en IndexedDB de este navegador{db.usesMemory ? " (no disponible: los datos se pierden al recargar)" : ""}. Exporta con regularidad.</p>
+        <p className="e-muted">Lo que registras se guarda en este navegador{db.usesMemory ? " (almacenamiento no disponible: se pierde al recargar)" : ""} y no sale de él. No se sincroniza entre el móvil y el ordenador: para pasarlo de uno a otro, exporta aquí e importa allí. Exporta de vez en cuando como copia de seguridad.</p>
         <div className="e-row wrap">
           <Btn variant="soft" icon={Download} onClick={doExport}>Exportar JSON</Btn>
           <label className="e-btn outline" style={{ cursor: "pointer" }}><Upload /> Importar archivo<input type="file" accept="application/json,.json" style={{ display: "none" }} onChange={onFile} /></label>
@@ -3516,7 +3476,7 @@ function SettingsScreen() {
         {exportText && <textarea className="e-textarea" readOnly value={exportText} onFocus={(e) => e.target.select()} aria-label="Exportación" />}
         <Field label="Importar pegando JSON"><textarea className="e-textarea" value={importText} onChange={(e) => setImportText(e.target.value)} placeholder='{"app":"entreno", …}' /></Field>
         {importText && <Btn variant="primary" icon={Upload} onClick={() => doImport(importText)}>Importar texto</Btn>}
-        <div className="e-row wrap"><Btn variant="outline" icon={RefreshCw} onClick={resetSeed}>Restaurar ejemplos</Btn><Btn variant="danger" icon={Trash2} onClick={wipe}>Borrar historial</Btn></div>
+        <div className="e-row wrap"><Btn variant="outline" icon={RefreshCw} onClick={resetAll}>Empezar de cero</Btn><Btn variant="danger" icon={Trash2} onClick={wipe}>Borrar historial</Btn></div>
       </Card>
 
       <Card title="Acerca de">
@@ -3602,12 +3562,14 @@ function ProgressScreen() {
               series={[{ key: "kg", name: "Peso", color: "var(--e-text2)", width: 1, dots: 2.5 }, { key: "ma", name: "Media 7 días", color: "var(--e-acc)", width: 2.5 }]}
               refLine={pg ? { y: pg.program.goals.milestoneKg, label: `hito ${pg.program.goals.milestoneKg} kg` } : null} />
           ) : <div className="e-chart tall"><Empty icon={Scale}>Registra tu peso para ver la evolución.</Empty></div>}
-          <div className="e-row between"><span className="e-row e-muted"><span style={{ width: 14, height: 3, background: "var(--e-acc)", borderRadius: 2 }} /> media 7 días <span style={{ width: 14, height: 1, background: "var(--e-text2)", marginLeft: 8 }} /> lecturas</span><span className="e-muted">{scale.entity && data.settings.ha.enabled ? (scale.status === "ok" ? `báscula: ${scale.entity}` : scale.status === "loading" ? "leyendo báscula…" : "báscula no disponible") : "registro manual"}</span></div>
+          <div className="e-row between">{wSeries.length > 1 ? <span className="e-row e-muted"><span style={{ width: 14, height: 3, background: "var(--e-acc)", borderRadius: 2 }} /> media 7 días <span style={{ width: 14, height: 1, background: "var(--e-text2)", marginLeft: 8 }} /> lecturas</span> : <span />}<span className="e-muted">{scale.entity && data.settings.ha.enabled ? (scale.status === "ok" ? `báscula: ${scale.entity}` : scale.status === "loading" ? "leyendo báscula…" : "báscula no disponible") : "registro manual"}</span></div>
         </Card>
 
         <Card title="Volumen semanal · series efectivas">
-          <StackedBars height={240} data={volData.map((r) => ({ ...r, label: r.w }))} fmt={(v) => fmtN(v, v % 1 ? 1 : 0)}
-            series={VOL_GROUPS.map((g) => ({ key: g.key, name: g.label, color: g.color }))} />
+          {sum(volData.map((r) => sum(VOL_GROUPS.map((g) => r[g.key])))) > 0 ? (
+            <StackedBars height={240} data={volData.map((r) => ({ ...r, label: r.w }))} fmt={(v) => fmtN(v, v % 1 ? 1 : 0)}
+              series={VOL_GROUPS.map((g) => ({ key: g.key, name: g.label, color: g.color }))} />
+          ) : <div className="e-chart tall"><Empty icon={Dumbbell}>Cierra tu primera sesión para ver el volumen por grupo muscular.</Empty></div>}
           <div className="e-chips">{VOL_GROUPS.map((g) => <span key={g.key} className="e-chip"><span style={{ width: 10, height: 10, borderRadius: 3, background: g.color }} />{g.label}</span>)}</div>
           <table className="e-table"><thead><tr><th>Esta semana</th><th className="r">Series</th><th className="r">Objetivo 10–20</th></tr></thead><tbody>
             {MUSCLES.map((m) => { const v = thisWeek[m]; const st = v >= 10 && v <= 20 ? "ok" : v > 20 ? "warn" : ""; return <tr key={m}><td style={{ textTransform: "capitalize" }}>{m}</td><td className="r"><b>{fmtN(v, 1)}</b></td><td className="r"><div className="e-bar" style={{ width: 90, marginLeft: "auto" }}><i className={v > 20 ? "over" : ""} style={{ width: `${clamp((v / 20) * 100, 0, 100)}%`, background: st === "ok" ? "var(--e-ok)" : undefined }} /></div></td></tr>; })}
