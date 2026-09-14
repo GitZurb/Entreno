@@ -668,7 +668,7 @@ const MuscleMap = ({ exercise }) => (
 );
 
 /* =============================================================================
- * DATOS DE EJEMPLO Y VALORES POR DEFECTO
+ * CONTENIDO INICIAL Y VALORES POR DEFECTO
  * Solo material disponible: banco inclinable, barra olímpica, dos barras de
  * mancuerna, discos (10×4, 5×4, 1,5×4), kettlebell de 10 kg y peso corporal.
  * ========================================================================== */
