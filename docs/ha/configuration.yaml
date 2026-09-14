@@ -8,7 +8,7 @@ panel_custom:
     sidebar_title: Entreno
     sidebar_icon: mdi:dumbbell
     url_path: entreno              # queda en https://TU-HA/entreno
-    module_url: /local/entrenador/panel.js?v=0.2.0
+    module_url: /local/entrenador/panel.js?v=0.2.1
     embed_iframe: false
     require_admin: false
 

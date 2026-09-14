@@ -1,6 +1,6 @@
 {
   "name": "entreno",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Entrenador personal para un solo usuario, integrable como panel_custom de Home Assistant",
   "type": "module",
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "lucide-react": "^1.46.0",
+    "preact": "^10.29.8",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "recharts": "^3.10.1"

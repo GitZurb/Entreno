@@ -19,8 +19,8 @@ npm run build      # genera dist/panel.js y dist/index.html
 npm run dev        # lo mismo, reconstruyendo al guardar
 ```
 
-Sin dependencias de CDN en tiempo de ejecución: React, recharts y lucide-react
-van dentro del bundle (~760 kB minificado).
+Sin dependencias de CDN en tiempo de ejecución: Preact, los iconos y las gráficas
+(SVG propio, sin librería) van dentro del bundle (223 kB minificado, 65 kB con gzip).
 
 ## Fase 1 · aplicación autónoma
 
@@ -56,5 +56,6 @@ implementa los setters `hass`, `narrow`, `route` y `panel`. Los ficheros de
 `config/www` se sirven con caché agresiva: versiona la URL del módulo
 (`/local/entrenador/panel.js?v=X.Y.Z`) en cada actualización.
 
-Guía completa de instalación, helpers y recargas: `docs/HOME_ASSISTANT.md`.
+Instalado en la instancia como dashboard «Entreno» con recurso de Lovelace y los
+cinco helpers creados. Guía completa y estado: `docs/HOME_ASSISTANT.md`.
 Fragmentos listos para copiar: `docs/ha/configuration.yaml` y `docs/ha/input_number.yaml`.

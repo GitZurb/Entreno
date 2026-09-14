@@ -23,10 +23,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, useContext, createContext } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
-  BarChart, Bar, ReferenceLine, Legend,
-} from "recharts";
-import {
   Home, Dumbbell, Utensils, TrendingUp, Settings, Plus, Check, Timer, ChevronLeft,
   ChevronRight, Trophy, Copy, Trash2, Play, X, Search, Download, Upload, RefreshCw,
   Droplets, Scale, Calendar, AlertTriangle, Pencil, Minus, Flame, ShoppingCart,
@@ -1785,16 +1781,203 @@ const MacroBar = ({ label, value, max, unit = "g" }) => (
 );
 const Note = ({ kind = "", icon: I = Info, children }) => <div className={`e-note ${kind}`}><I />{children}</div>;
 const Empty = ({ icon: I = Info, children }) => <div className="e-empty"><I />{children}</div>;
-const ChartTip = ({ active, payload, label, fmt }) => {
-  if (!active || !payload?.length) return null;
+/* -----------------------------------------------------------------------------
+ * GRÁFICAS · SVG propio
+ * Sin librería de gráficas: el panel se instala como un único recurso y cada kB
+ * cuenta. Tres formas: línea (con media móvil y línea de referencia), barras
+ * apiladas y minigráfica. Todas con ejes rotulados, rejilla discreta y detalle
+ * al pasar el dedo o el ratón.
+ * -------------------------------------------------------------------------- */
+function useWidth() {
+  const ref = useRef(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const set = () => setW(el.clientWidth);
+    set();
+    if (typeof ResizeObserver === "undefined") { window.addEventListener("resize", set); return () => window.removeEventListener("resize", set); }
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w];
+}
+
+// Escala con escalones "redondos" (1, 2, 5 × potencia de 10). El dominio se
+// redondea a los propios escalones, así cada marca del eje es un valor real y
+// la serie nunca se sale del área de dibujo.
+function niceScale(min, max, count = 4) {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return { lo: 0, hi: 1, ticks: [0, 1] };
+  if (max - min < 1e-9) { const c = r1(min); return { lo: c - 1, hi: c + 1, ticks: [c - 1, c, c + 1] }; }
+  const raw = (max - min) / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  const step = (n >= 5 ? 10 : n >= 2 ? 5 : n >= 1 ? 2 : 1) * mag;
+  const lo = Math.floor(min / step + 1e-9) * step;
+  const hi = Math.ceil(max / step - 1e-9) * step;
+  const ticks = [];
+  for (let v = lo; v <= hi + 1e-9; v += step) ticks.push(r1(v));
+  return { lo: r1(lo), hi: r1(hi), ticks };
+}
+// Reparte las etiquetas del eje X dejando hueco suficiente entre ellas.
+function pickXTicks(n, width, minGap = 56) {
+  if (n <= 1) return [0];
+  const maxTicks = Math.max(2, Math.floor(width / minGap));
+  const every = Math.max(1, Math.ceil((n - 1) / (maxTicks - 1)));
+  const out = [];
+  for (let i = 0; i < n; i += every) out.push(i);
+  const last = n - 1;
+  if (out[out.length - 1] !== last) {
+    if (last - out[out.length - 1] < every * 0.6) out[out.length - 1] = last;
+    else out.push(last);
+  }
+  return out;
+}
+const AXIS_TEXT = { fill: "var(--e-text2)", fontSize: 11 };
+
+function ChartTooltip({ at, width, children }) {
+  if (!at) return null;
+  const left = clamp(at.x, 70, Math.max(70, width - 70));
   return (
-    <div className="e-tooltip">
-      <div className="e-muted">{label}</div>
-      {payload.map((p) => <div key={p.dataKey}><span style={{ color: p.color }}>●</span> {p.name}: <b>{fmt ? fmt(p.value, p.dataKey) : p.value}</b></div>)}
+    <div className="e-tooltip" style={{ position: "absolute", left, top: 4, transform: "translateX(-50%)", pointerEvents: "none", zIndex: 2, whiteSpace: "nowrap" }}>{children}</div>
+  );
+}
+
+// data: [{ label, ...valores }] · series: [{ key, name, color, width, dots, opacity }]
+function LineChart({ data, series, height = 200, fmt = (v) => fmtN(v, 1), yFmt, yWidth = 40, refLine }) {
+  const [ref, w] = useWidth();
+  const [hover, setHover] = useState(null);
+  const pad = { t: 10, r: 10, b: 22, l: yWidth };
+  const iw = Math.max(10, w - pad.l - pad.r);
+  const ih = Math.max(10, height - pad.t - pad.b);
+  const vals = data.flatMap((d) => series.map((s) => d[s.key])).filter(Number.isFinite);
+  // La línea de referencia no estira el dominio: un objetivo lejano aplastaría
+  // la serie contra el borde. Se dibuja solo cuando cae dentro de lo medido.
+  const { lo, hi, ticks } = niceScale(vals.length ? Math.min(...vals) : 0, vals.length ? Math.max(...vals) : 1);
+  const tick = yFmt || ((v) => fmtN(v, Number.isInteger(v) ? 0 : 1));
+  const showRef = refLine && Number.isFinite(refLine.y) && refLine.y >= lo && refLine.y <= hi;
+  const X = (i) => pad.l + (data.length <= 1 ? iw / 2 : (i / (data.length - 1)) * iw);
+  const Y = (v) => pad.t + ih - ((v - lo) / (hi - lo || 1)) * ih;
+  const xTicks = pickXTicks(data.length, iw);
+  const onMove = (e) => {
+    if (!data.length) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    const px = (e.touches ? e.touches[0].clientX : e.clientX) - box.left;
+    const i = clamp(Math.round(((px - pad.l) / (iw || 1)) * (data.length - 1)), 0, data.length - 1);
+    setHover({ i, x: X(i) });
+  };
+  return (
+    <div ref={ref} style={{ position: "relative", width: "100%", height }}>
+      {w > 0 && (
+        <svg width={w} height={height} role="img" style={{ display: "block", touchAction: "pan-y" }}
+          onMouseMove={onMove} onMouseLeave={() => setHover(null)} onTouchStart={onMove} onTouchMove={onMove} onTouchEnd={() => setHover(null)}>
+          {ticks.map((t) => (
+            <g key={t}>
+              <line x1={pad.l} y1={Y(t)} x2={w - pad.r} y2={Y(t)} stroke="var(--e-div)" strokeWidth={1} />
+              <text x={pad.l - 6} y={Y(t)} dy="0.32em" textAnchor="end" {...AXIS_TEXT}>{tick(t)}</text>
+            </g>
+          ))}
+          {xTicks.map((i) => <text key={i} x={X(i)} y={height - 5} textAnchor={i === 0 ? "start" : i === data.length - 1 ? "end" : "middle"} {...AXIS_TEXT}>{data[i].label}</text>)}
+          {showRef && (
+            <g>
+              <line x1={pad.l} y1={Y(refLine.y)} x2={w - pad.r} y2={Y(refLine.y)} stroke={refLine.color || "var(--e-ok)"} strokeWidth={1.5} strokeDasharray="5 4" />
+              <text x={w - pad.r} y={Y(refLine.y) - 6} textAnchor="end" fontSize={11} fill={refLine.color || "var(--e-ok)"}>{refLine.label}</text>
+            </g>
+          )}
+          {series.map((s) => {
+            const pts = data.map((d, i) => (Number.isFinite(d[s.key]) ? `${X(i)},${Y(d[s.key])}` : null)).filter(Boolean);
+            return (
+              <g key={s.key}>
+                <polyline points={pts.join(" ")} fill="none" stroke={s.color} strokeWidth={s.width || 2} strokeLinejoin="round" strokeLinecap="round" opacity={s.opacity ?? 1} />
+                {s.dots && data.map((d, i) => (Number.isFinite(d[s.key]) ? <circle key={i} cx={X(i)} cy={Y(d[s.key])} r={s.dots} fill={s.color} opacity={s.opacity ?? 1} /> : null))}
+              </g>
+            );
+          })}
+          {hover && (
+            <g>
+              <line x1={hover.x} y1={pad.t} x2={hover.x} y2={pad.t + ih} stroke="var(--e-text2)" strokeWidth={1} strokeDasharray="3 3" />
+              {series.map((s) => (Number.isFinite(data[hover.i][s.key]) ? <circle key={s.key} cx={hover.x} cy={Y(data[hover.i][s.key])} r={5} fill={s.color} stroke="var(--e-card)" strokeWidth={2} /> : null))}
+            </g>
+          )}
+        </svg>
+      )}
+      {hover && (
+        <ChartTooltip at={hover} width={w}>
+          <div className="e-muted">{data[hover.i].label}</div>
+          {series.map((s) => (Number.isFinite(data[hover.i][s.key]) ? <div key={s.key}><span style={{ color: s.color }}>●</span> {s.name}: <b>{fmt(data[hover.i][s.key])}</b></div> : null))}
+        </ChartTooltip>
+      )}
     </div>
   );
-};
-const CHART_AXIS = { tick: { fill: "var(--e-text2)", fontSize: 11 }, axisLine: false, tickLine: false };
+}
+
+function StackedBars({ data, series, height = 200, fmt = (v) => fmtN(v, 0), yWidth = 32 }) {
+  const [ref, w] = useWidth();
+  const [hover, setHover] = useState(null);
+  const pad = { t: 10, r: 8, b: 22, l: yWidth };
+  const iw = Math.max(10, w - pad.l - pad.r);
+  const ih = Math.max(10, height - pad.t - pad.b);
+  const totals = data.map((d) => sum(series.map((s) => num(d[s.key]))));
+  const { hi, ticks } = niceScale(0, Math.max(1, ...totals));
+  const band = iw / Math.max(1, data.length);
+  const bw = Math.min(34, band * 0.5);
+  const Y = (v) => pad.t + ih - (v / (hi || 1)) * ih;
+  return (
+    <div ref={ref} style={{ position: "relative", width: "100%", height }}>
+      {w > 0 && (
+        <svg width={w} height={height} role="img" style={{ display: "block" }} onMouseLeave={() => setHover(null)}>
+          {ticks.map((t) => (
+            <g key={t}>
+              <line x1={pad.l} y1={Y(t)} x2={w - pad.r} y2={Y(t)} stroke="var(--e-div)" strokeWidth={1} />
+              <text x={pad.l - 6} y={Y(t)} dy="0.32em" textAnchor="end" {...AXIS_TEXT}>{fmt(t)}</text>
+            </g>
+          ))}
+          {data.map((d, i) => {
+            const cx = pad.l + band * i + band / 2;
+            let acc = 0;
+            return (
+              <g key={i} onMouseEnter={() => setHover({ i, x: cx })} onTouchStart={() => setHover({ i, x: cx })}>
+                <rect x={cx - band / 2} y={pad.t} width={band} height={ih} fill={hover?.i === i ? "var(--e-card2)" : "transparent"} />
+                {series.map((s) => {
+                  const v = num(d[s.key]);
+                  if (v <= 0) return null;
+                  const y0 = Y(acc), y1 = Y(acc + v);
+                  acc += v;
+                  return <rect key={s.key} x={cx - bw / 2} y={y1} width={bw} height={Math.max(1, y0 - y1 - 2)} fill={s.color} rx={2} />;
+                })}
+                <text x={cx} y={height - 5} textAnchor="middle" {...AXIS_TEXT}>{d.label}</text>
+              </g>
+            );
+          })}
+        </svg>
+      )}
+      {hover && totals[hover.i] > 0 && (
+        <ChartTooltip at={hover} width={w}>
+          <div className="e-muted">{data[hover.i].label}</div>
+          {series.map((s) => (num(data[hover.i][s.key]) > 0 ? <div key={s.key}><span style={{ color: s.color }}>●</span> {s.name}: <b>{fmt(data[hover.i][s.key])}</b></div> : null))}
+          <div style={{ borderTop: "1px solid var(--e-div)", marginTop: 4, paddingTop: 4 }}>Total <b>{fmt(totals[hover.i])}</b></div>
+        </ChartTooltip>
+      )}
+    </div>
+  );
+}
+
+function Sparkline({ data, series, width = 140, height = 56 }) {
+  const vals = data.flatMap((d) => series.map((s) => d[s.key])).filter(Number.isFinite);
+  if (vals.length < 2) return null;
+  const lo = Math.min(...vals) - 0.2, hi = Math.max(...vals) + 0.2;
+  const X = (i) => 2 + (i / (data.length - 1)) * (width - 4);
+  const Y = (v) => 2 + (height - 4) - ((v - lo) / (hi - lo || 1)) * (height - 4);
+  return (
+    <svg width={width} height={height} aria-hidden="true" style={{ display: "block" }}>
+      {series.map((s) => (
+        <polyline key={s.key} fill="none" stroke={s.color} strokeWidth={s.width || 2} strokeLinejoin="round" strokeLinecap="round" opacity={s.opacity ?? 1}
+          points={data.map((d, i) => (Number.isFinite(d[s.key]) ? `${X(i)},${Y(d[s.key])}` : null)).filter(Boolean).join(" ")} />
+      ))}
+    </svg>
+  );
+}
 
 /* =============================================================================
  * NAVEGACIÓN
@@ -2427,17 +2610,9 @@ function ExerciseDetail({ exercise, onBack }) {
             <div className="e-hero"><span className="e-big md">{best.kg > 0 ? fmtKg(best.e1rm) : best.reps}</span><span className="e-unit">{best.kg > 0 ? "kg 1RM est." : "reps"}</span><span className="e-muted" style={{ marginLeft: "auto" }}>{best.kg > 0 ? `${fmtKg(best.kg)} × ${best.reps}` : ""} · {fmtDateShort(best.date)}</span></div>
           ) : <p className="e-muted">Sin registros todavía.</p>}
           {hist.length > 1 && (
-            <div className="e-chart">
-              <ResponsiveContainer>
-                <LineChart data={hist.map((h) => ({ ...h, d: fmtDateShort(h.date) }))} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--e-div)" vertical={false} />
-                  <XAxis dataKey="d" {...CHART_AXIS} />
-                  <YAxis {...CHART_AXIS} domain={["auto", "auto"]} width={40} tickFormatter={(v) => fmtKg(v)} />
-                  <Tooltip content={<ChartTip fmt={(v) => `${fmtKg(v)} kg`} />} />
-                  <Line type="monotone" dataKey="e1rm" name="1RM estimado" stroke="var(--e-acc)" strokeWidth={2} dot={{ r: 3, fill: "var(--e-acc)", strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <LineChart height={200} fmt={(v) => `${fmtKg(v)} kg`} yFmt={fmtKg}
+              data={hist.map((h) => ({ label: fmtDateShort(h.date), e1rm: h.e1rm }))}
+              series={[{ key: "e1rm", name: "1RM estimado", color: "var(--e-acc)", width: 2, dots: 3 }]} />
           )}
         </Card>
         <Card title="Técnica"><p style={{ fontSize: 14 }}>{def.notes || "Sin notas."}</p></Card>
@@ -3139,15 +3314,7 @@ function TodayScreen() {
               <WeightTrend series={series} />
             </div>
             {spark.length > 1 && (
-              <div style={{ width: 140, height: 56 }}>
-                <ResponsiveContainer>
-                  <LineChart data={spark} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
-                    <YAxis hide domain={["dataMin - 0.3", "dataMax + 0.3"]} />
-                    <Line type="monotone" dataKey="ma" stroke="var(--e-acc)" strokeWidth={2} dot={false} isAnimationActive={false} />
-                    <Line type="monotone" dataKey="kg" stroke="var(--e-text2)" strokeWidth={1} dot={false} strokeOpacity={0.6} isAnimationActive={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              <Sparkline data={spark} series={[{ key: "kg", color: "var(--e-text2)", width: 1, opacity: 0.6 }, { key: "ma", color: "var(--e-acc)", width: 2 }]} />
             )}
           </div>
           {scale.status === "error" && <Note kind="err" icon={AlertTriangle}>No se pudo leer {scale.entity}. Se usan los registros manuales.</Note>}
@@ -3429,36 +3596,18 @@ function ProgressScreen() {
             </div>
           ); })()}
           <Segmented options={[{ value: 30, label: "30 d" }, { value: 90, label: "90 d" }, { value: 365, label: "1 año" }]} value={range} onChange={setRange} />
-          <div className="e-chart tall">
-            {wSeries.length > 1 ? (
-              <ResponsiveContainer>
-                <LineChart data={wSeries} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--e-div)" vertical={false} />
-                  <XAxis dataKey="d" {...CHART_AXIS} minTickGap={28} />
-                  <YAxis {...CHART_AXIS} domain={["auto", "auto"]} width={40} tickFormatter={(v) => fmtKg(v)} />
-                  <Tooltip content={<ChartTip fmt={(v) => `${fmtKg(v)} kg`} />} />
-                  <Line type="monotone" dataKey="kg" name="Peso" stroke="var(--e-text2)" strokeWidth={1} dot={{ r: 2.5, fill: "var(--e-text2)", strokeWidth: 0 }} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="ma" name="Media 7 días" stroke="var(--e-acc)" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} isAnimationActive={false} />
-                  {pg && <ReferenceLine y={pg.program.goals.milestoneKg} stroke="var(--e-ok)" strokeDasharray="4 4" label={{ value: `hito ${pg.program.goals.milestoneKg} kg`, fill: "var(--e-ok)", fontSize: 11, position: "insideBottomRight" }} />}
-                </LineChart>
-              </ResponsiveContainer>
-            ) : <Empty icon={Scale}>Registra tu peso para ver la evolución.</Empty>}
-          </div>
+          {wSeries.length > 1 ? (
+            <LineChart height={240} fmt={(v) => `${fmtKg(v)} kg`} yFmt={fmtKg}
+              data={wSeries.map((p) => ({ label: p.d, kg: p.kg, ma: p.ma }))}
+              series={[{ key: "kg", name: "Peso", color: "var(--e-text2)", width: 1, dots: 2.5 }, { key: "ma", name: "Media 7 días", color: "var(--e-acc)", width: 2.5 }]}
+              refLine={pg ? { y: pg.program.goals.milestoneKg, label: `hito ${pg.program.goals.milestoneKg} kg` } : null} />
+          ) : <div className="e-chart tall"><Empty icon={Scale}>Registra tu peso para ver la evolución.</Empty></div>}
           <div className="e-row between"><span className="e-row e-muted"><span style={{ width: 14, height: 3, background: "var(--e-acc)", borderRadius: 2 }} /> media 7 días <span style={{ width: 14, height: 1, background: "var(--e-text2)", marginLeft: 8 }} /> lecturas</span><span className="e-muted">{scale.entity && data.settings.ha.enabled ? (scale.status === "ok" ? `báscula: ${scale.entity}` : scale.status === "loading" ? "leyendo báscula…" : "báscula no disponible") : "registro manual"}</span></div>
         </Card>
 
         <Card title="Volumen semanal · series efectivas">
-          <div className="e-chart tall">
-            <ResponsiveContainer>
-              <BarChart data={volData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="28%">
-                <CartesianGrid stroke="var(--e-div)" vertical={false} />
-                <XAxis dataKey="w" {...CHART_AXIS} />
-                <YAxis {...CHART_AXIS} allowDecimals={false} width={32} />
-                <Tooltip cursor={{ fill: "var(--e-card2)" }} content={<ChartTip fmt={(v) => `${fmtN(v, 1)} series`} />} />
-                {VOL_GROUPS.map((g, i) => <Bar key={g.key} dataKey={g.key} name={g.label} stackId="v" fill={g.color} stroke="var(--e-card)" strokeWidth={1} radius={i === VOL_GROUPS.length - 1 ? [4, 4, 0, 0] : 0} isAnimationActive={false} />)}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <StackedBars height={240} data={volData.map((r) => ({ ...r, label: r.w }))} fmt={(v) => fmtN(v, v % 1 ? 1 : 0)}
+            series={VOL_GROUPS.map((g) => ({ key: g.key, name: g.label, color: g.color }))} />
           <div className="e-chips">{VOL_GROUPS.map((g) => <span key={g.key} className="e-chip"><span style={{ width: 10, height: 10, borderRadius: 3, background: g.color }} />{g.label}</span>)}</div>
           <table className="e-table"><thead><tr><th>Esta semana</th><th className="r">Series</th><th className="r">Objetivo 10–20</th></tr></thead><tbody>
             {MUSCLES.map((m) => { const v = thisWeek[m]; const st = v >= 10 && v <= 20 ? "ok" : v > 20 ? "warn" : ""; return <tr key={m}><td style={{ textTransform: "capitalize" }}>{m}</td><td className="r"><b>{fmtN(v, 1)}</b></td><td className="r"><div className="e-bar" style={{ width: 90, marginLeft: "auto" }}><i className={v > 20 ? "over" : ""} style={{ width: `${clamp((v / 20) * 100, 0, 100)}%`, background: st === "ok" ? "var(--e-ok)" : undefined }} /></div></td></tr>; })}
@@ -3473,17 +3622,9 @@ function ProgressScreen() {
               <div className="e-stack"><span className="e-label">Último</span><b style={{ fontSize: 22 }}>{fmtKg(hist[hist.length - 1].e1rm)} kg</b></div>
               <div className="e-stack"><span className="e-label">Sesiones</span><b style={{ fontSize: 22 }}>{hist.length}</b></div>
             </div>
-            <div className="e-chart">
-              <ResponsiveContainer>
-                <LineChart data={hist} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--e-div)" vertical={false} />
-                  <XAxis dataKey="d" {...CHART_AXIS} />
-                  <YAxis {...CHART_AXIS} domain={["auto", "auto"]} width={40} tickFormatter={(v) => fmtKg(v)} />
-                  <Tooltip content={<ChartTip fmt={(v, k) => `${fmtKg(v)} kg`} />} />
-                  <Line type="monotone" dataKey="e1rm" name="1RM estimado" stroke="var(--e-acc)" strokeWidth={2} dot={{ r: 3, fill: "var(--e-acc)", strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <LineChart height={200} fmt={(v) => `${fmtKg(v)} kg`} yFmt={fmtKg}
+              data={hist.map((h) => ({ label: h.d, e1rm: h.e1rm }))}
+              series={[{ key: "e1rm", name: "1RM estimado", color: "var(--e-acc)", width: 2, dots: 3 }]} />
           </>) : <Empty icon={TrendingUp}>Cierra alguna sesión con carga para ver la evolución del 1RM.</Empty>}
         </Card>
 
