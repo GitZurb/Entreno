@@ -353,11 +353,12 @@ const db = (() => {
   let dbp = null;
   const memory = Object.fromEntries(Object.keys(STORES).map((s) => [s, new Map()]));
   let useMemory = typeof indexedDB === "undefined";
+  let blocked = false;
 
   function open() {
     if (dbp) return dbp;
-    dbp = new Promise((resolve, reject) => {
-      let req;
+    dbp = new Promise((resolve) => {
+      let req, timer;
       try { req = indexedDB.open(DB_NAME, DB_VERSION); } catch (e) { useMemory = true; return resolve(null); }
       req.onupgradeneeded = () => {
         const d = req.result;
@@ -365,9 +366,19 @@ const db = (() => {
           if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, { keyPath });
         }
       };
-      req.onsuccess = () => resolve(req.result);
+      req.onsuccess = () => {
+        clearTimeout(timer);
+        const d = req.result;
+        // Si otra pestaña (o una versión nueva de la app) necesita migrar, cerramos
+        // esta conexión para no bloquear la actualización del esquema.
+        d.onversionchange = () => { d.close(); dbp = null; };
+        blocked = false;
+        resolve(d);
+      };
       req.onerror = () => { useMemory = true; resolve(null); };
-      req.onblocked = () => reject(new Error("IndexedDB bloqueada"));
+      // Otra conexión abierta (una pestaña antigua) impide migrar: esperamos unos
+      // segundos y, si sigue bloqueada, seguimos en memoria y avisamos.
+      req.onblocked = () => { timer = setTimeout(() => { blocked = true; useMemory = true; resolve(null); }, 3000); };
     });
     return dbp;
   }
@@ -382,6 +393,7 @@ const db = (() => {
 
   return {
     get usesMemory() { return useMemory; },
+    get blocked() { return blocked; },
     async getAll(store) {
       const d = await open();
       if (!d || useMemory) return [...memory[store].values()];
@@ -1415,11 +1427,13 @@ function normalize(raw) {
 function StoreProvider({ children }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [blockedWarn, setBlockedWarn] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         let raw = await db.loadAll();
+        if (db.blocked) setBlockedWarn(true);
         if (!raw.settings?.length) {
           raw = buildSeed();
           for (const [s, recs] of Object.entries(raw)) await db.putMany(s, recs);
@@ -1469,9 +1483,18 @@ function StoreProvider({ children }) {
     };
   }, [data]);
 
-  if (error) return <div className="e-page"><div className="e-note err"><AlertTriangle /> No se pudo abrir el almacén local: {String(error.message || error)}</div></div>;
+  if (error) return <div className="e-page"><div className="e-note err"><AlertTriangle /><span>No se pudo abrir el almacén local: {String(error.message || error)}</span></div><Btn variant="primary" icon={RefreshCw} onClick={() => window.location.reload()}>Recargar</Btn></div>;
   if (!api) return <div className="e-page"><p className="e-muted">Cargando…</p></div>;
-  return <StoreCtx.Provider value={api}>{children}</StoreCtx.Provider>;
+  return (
+    <StoreCtx.Provider value={api}>
+      {blockedWarn && (
+        <div style={{ maxWidth: 720, margin: "12px auto 0", padding: "0 16px" }}>
+          <div className="e-note warn" style={{ alignItems: "center" }}><AlertTriangle /><span className="e-grow">Otra pestaña con la versión anterior bloquea la base de datos: los cambios no se guardarán hasta recargar.</span><button className="e-btn xs primary" onClick={() => window.location.reload()}>Recargar</button></div>
+        </div>
+      )}
+      {children}
+    </StoreCtx.Provider>
+  );
 }
 
 function ToastProvider({ children }) {
