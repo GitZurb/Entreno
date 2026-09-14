@@ -1,0 +1,20 @@
+{
+  "name": "entreno",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Entrenador personal para un solo usuario, integrable como panel_custom de Home Assistant",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch"
+  },
+  "dependencies": {
+    "lucide-react": "^1.46.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
