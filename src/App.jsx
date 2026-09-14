@@ -31,7 +31,7 @@ import {
   ChevronRight, Trophy, Copy, Trash2, Play, X, Search, Download, Upload, RefreshCw,
   Droplets, Scale, Calendar, AlertTriangle, Pencil, Minus, Flame, ShoppingCart,
   Info, Wifi, WifiOff, ArrowUp, ArrowDown, Library, Layers, BookOpen, Repeat, ArrowUpDown,
-  SkipForward, CircleCheck, ListTodo, CalendarDays, Bell, Sparkles,
+  SkipForward, CircleCheck, ListTodo, CalendarDays, Bell, Sparkles, Menu,
 } from "lucide-react";
 
 const APP_VERSION = typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev";
@@ -59,13 +59,15 @@ entreno-panel{
   --e-err-soft: color-mix(in srgb, var(--e-err) 14%, transparent);
   --e-warn-soft: color-mix(in srgb, var(--e-warn) 16%, transparent);
   --e-r-card: 16px; --e-r-btn: 12px;
-  display:block; height:100%; min-height:100%;
+  display:block; height:100vh; height:100dvh;
   background: var(--e-bg); color: var(--e-text);
   font-family: var(--e-font); font-size:15px; line-height:1.4;
   font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
 }
-entreno-panel.e-standalone{ height:100dvh; }
+entreno-panel > .e-host{ height:100%; }
+.e-topbar{ display:flex; align-items:center; gap:8px; height:48px; padding:0 8px; border-bottom:1px solid var(--e-div); background:var(--e-card); }
+.e-topbar b{ font-size:15px; }
 entreno-panel *, entreno-panel *::before, entreno-panel *::after{ box-sizing:border-box; }
 entreno-panel button, entreno-panel input, entreno-panel select, entreno-panel textarea{
   font: inherit; color: inherit; font-variant-numeric: tabular-nums;
@@ -305,14 +307,13 @@ button.e-item:hover{ background:var(--e-card2); }
 .e-hero-card{ border-left:4px solid var(--e-acc); }
 `;
 
-let stylesInjected = false;
-function injectStyles() {
-  if (stylesInjected || typeof document === "undefined") return;
+// La hoja de estilos se inserta dentro del propio elemento: así se aplica igual
+// si Home Assistant monta el panel en el árbol principal o dentro de un shadow root.
+function makeStyles() {
   const s = document.createElement("style");
-  s.id = "entreno-styles";
+  s.setAttribute("data-entreno", "");
   s.textContent = CSS;
-  document.head.appendChild(s);
-  stylesInjected = true;
+  return s;
 }
 
 /* =============================================================================
@@ -1141,6 +1142,7 @@ class HAError extends Error {
 const ha = {
   hass: null,
   narrow: false,
+  inHA: false,
   _listeners: new Set(),
   _watched: [],
   _sig: "",
@@ -3500,6 +3502,12 @@ function App() {
   return (
     <NavCtx.Provider value={{ ...nav, go }}>
       <div className="e-app">
+        {ha.inHA && ha.narrow && (
+          <div className="e-topbar">
+            <IconBtn icon={Menu} label="Menú de Home Assistant" onClick={(e) => e.currentTarget.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }))} />
+            <b>Entreno</b>
+          </div>
+        )}
         <main className="e-main" ref={mainRef}>
           {nav.tab === "hoy" && <TodayScreen />}
           {nav.tab === "entreno" && <TrainScreen />}
@@ -3533,16 +3541,22 @@ function Root() {
 class EntrenoPanel extends HTMLElement {
   set hass(v) { this._hass = v; ha.setHass(v || null); }
   get hass() { return this._hass; }
-  set narrow(v) { this._narrow = v; ha.narrow = !!v; }
+  set narrow(v) { this._narrow = v; ha.narrow = !!v; ha._listeners.forEach((fn) => fn()); }
   get narrow() { return this._narrow; }
   set route(v) { this._route = v; }
   get route() { return this._route; }
   set panel(v) { this._panel = v; }
   get panel() { return this._panel; }
   connectedCallback() {
-    injectStyles();
-    if (!document.querySelector("home-assistant")) this.classList.add("e-standalone");
-    if (!this._root) { this._root = createRoot(this); this._root.render(<Root />); }
+    if (!this._host) {
+      this.appendChild(makeStyles());
+      this._host = document.createElement("div");
+      this._host.className = "e-host";
+      this.appendChild(this._host);
+    }
+    ha.inHA = !!(this.getRootNode()?.host || document.querySelector("home-assistant"));
+    if (!ha.inHA) this.classList.add("e-standalone");
+    if (!this._root) { this._root = createRoot(this._host); this._root.render(<Root />); }
   }
   disconnectedCallback() {
     if (this._root) { const r = this._root; this._root = null; setTimeout(() => r.unmount()); }

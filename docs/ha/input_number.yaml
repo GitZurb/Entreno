@@ -1,0 +1,42 @@
+# Helpers de Entreno. Persisten en el recorder y se pueden usar en tarjetas y automatizaciones.
+# Recarga: Herramientas para desarrolladores → YAML → "Input numbers" (no hace falta reiniciar).
+entreno_volumen_semanal:
+  name: Entreno · volumen semanal
+  unit_of_measurement: series
+  min: 0
+  max: 300
+  step: 0.5
+  mode: box
+  icon: mdi:weight-lifter
+entreno_sesiones_semana:
+  name: Entreno · sesiones de la semana
+  unit_of_measurement: sesiones
+  min: 0
+  max: 14
+  step: 1
+  mode: box
+  icon: mdi:calendar-check
+entreno_adherencia:
+  name: Entreno · adherencia
+  unit_of_measurement: "%"
+  min: 0
+  max: 200
+  step: 1
+  mode: box
+  icon: mdi:percent
+entreno_tonelaje_dia:
+  name: Entreno · tonelaje del día
+  unit_of_measurement: kg
+  min: 0
+  max: 50000
+  step: 1
+  mode: box
+  icon: mdi:dumbbell
+entreno_proteina_restante:
+  name: Entreno · proteína restante hoy
+  unit_of_measurement: g
+  min: 0
+  max: 400
+  step: 1
+  mode: box
+  icon: mdi:food-drumstick

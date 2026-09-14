@@ -1,0 +1,17 @@
+# Fragmento para configuration.yaml de Home Assistant.
+# El módulo se copia a config/www/entrenador/panel.js (se sirve en /local/entrenador/panel.js).
+#
+# IMPORTANTE: config/www se sirve con caché agresiva. Cambia el parámetro ?v=
+# cada vez que actualices panel.js para que el navegador cargue la versión nueva.
+panel_custom:
+  - name: entreno-panel            # nombre del elemento personalizado que define panel.js
+    sidebar_title: Entreno
+    sidebar_icon: mdi:dumbbell
+    url_path: entreno              # queda en https://TU-HA/entreno
+    module_url: /local/entrenador/panel.js?v=0.2.0
+    embed_iframe: false
+    require_admin: false
+
+# Helpers que la app rellena con input_number.set_value.
+# Alternativa: crearlos desde Ajustes → Dispositivos y servicios → Ayudantes.
+input_number: !include input_number.yaml

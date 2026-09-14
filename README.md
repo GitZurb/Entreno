@@ -48,12 +48,13 @@ Cada ejercicio tiene un pictograma vectorial propio (`EXERCISE_FIGURES`): una fi
 perfil parametrizada por ángulos con dos fotogramas, inicio y final, más una silueta
 con los músculos implicados. Todo va dentro del bundle, sin imágenes externas.
 
-## Fase 2 · panel de Home Assistant (pendiente de visto bueno)
+## Fase 2 · panel de Home Assistant
 
 El mismo bundle `dist/panel.js` se copia a `config/www/entrenador/panel.js` y se
 registra con `panel_custom` (`embed_iframe: false`). El elemento `<entreno-panel>`
 implementa los setters `hass`, `narrow`, `route` y `panel`. Los ficheros de
 `config/www` se sirven con caché agresiva: versiona la URL del módulo
-(`/local/entrenador/panel.js?v=X.Y.Z`) en cada actualización. Fragmento de
-configuración, lista de helpers `input_number` e instrucciones de recarga se
-entregan en la fase 2.
+(`/local/entrenador/panel.js?v=X.Y.Z`) en cada actualización.
+
+Guía completa de instalación, helpers y recargas: `docs/HOME_ASSISTANT.md`.
+Fragmentos listos para copiar: `docs/ha/configuration.yaml` y `docs/ha/input_number.yaml`.
