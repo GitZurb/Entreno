@@ -2,12 +2,13 @@
 
 ## Estado de esta instalación
 
-Ya está hecho en la instancia (Home Assistant 2026.9.2, vía MCP):
+Instalado y funcionando en la instancia (Home Assistant 2026.9.2), todo por MCP:
 
 | Elemento | Valor |
 |---|---|
 | Panel en la barra lateral | **Entreno** (`/entreno-app`), vista en modo panel con la tarjeta `custom:entreno-panel` |
-| Recurso de Lovelace | `/local/entrenador/panel.js?v=0.2.1` (módulo) |
+| Módulo | instalado con **HACS** como repositorio personalizado `GitZurb/Entreno` |
+| Recurso de Lovelace | `/hacsfiles/Entreno/panel.js` (lo registra HACS solo) |
 | Helper volumen semanal | `input_number.entreno_volumen_semanal` · series · 0–300 · paso 0,5 |
 | Helper sesiones de la semana | `input_number.entreno_sesiones_semana` · sesiones · 0–14 · paso 1 |
 | Helper adherencia | `input_number.entreno_adherencia` · % · 0–200 · paso 1 |
@@ -17,26 +18,38 @@ Ya está hecho en la instancia (Home Assistant 2026.9.2, vía MCP):
 | Lista de la compra | `todo.lista_de_la_compra` |
 | Aviso de descanso | `notify.mobile_app_movil` |
 
-Falta **un paso manual**, el único que no se puede hacer por MCP porque Home
-Assistant no expone escritura de ficheros:
+No hay que copiar ficheros, editar `configuration.yaml` ni reiniciar. Tras
+instalar o actualizar basta con recargar la página del navegador (y vaciar la
+caché del sitio en la app móvil la primera vez).
 
-1. Copia `dist/panel.js` a `config/www/entrenador/panel.js` (crea la carpeta si
-   no existe; `config/www` se sirve como `/local/`). Vale cualquier vía: File
-   editor, Samba, SSH, o el navegador de archivos de tu editor.
-2. Recarga la página de Home Assistant. Ya está: no hay que editar
-   `configuration.yaml` ni reiniciar.
-
-Hasta que el fichero exista, el panel muestra «Custom element doesn't exist:
-entreno-panel». Es lo esperado.
-
-No configurado por no haber entidades de ese tipo en la instancia:
+Sin configurar por no existir entidades de ese tipo en la instancia:
 
 - **Calendario de días entrenados**: no hay ninguna entidad `calendar`. Si
-  añades una (Calendario local, Google), selecciónala en Ajustes → Home Assistant.
+  añades una (Calendario local, Google), se elige en Ajustes → Home Assistant.
 - **Pasos diarios**: no hay sensor de pasos. La app companion del móvil puede
-  exponerlo (Ajustes → Companion → Sensores → Pasos); luego se elige en Ajustes.
-- **Escenas de inicio y cierre**: tienes escenas de Hue disponibles, pero la
-  elección es tuya; se configuran dentro de la app.
+  exponerlo en Ajustes → Compañero → Sensores → Pasos.
+- **Escenas de inicio y cierre**: hay escenas de Hue disponibles, pero cuál usar
+  es decisión tuya; se configuran dentro de la app.
+
+## Instalar en otra instancia
+
+1. HACS → Frontend → menú de los tres puntos → Repositorios personalizados.
+2. Repositorio `GitZurb/Entreno`, categoría **Lovelace**. Descargar.
+3. Crear un dashboard con una vista en modo panel y una sola tarjeta
+   `custom:entreno-panel`. Los ajustes de la tarjeta admiten entidades por
+   defecto (`scale_entity`, `todo_entity`, `notify_service`, `helper_*`), que
+   se aplican solo en el primer arranque; después manda la pantalla de Ajustes.
+4. Crear los cinco helpers `input_number` de la tabla de arriba (o copiar
+   `docs/ha/input_number.yaml`).
+
+## Actualizar
+
+1. `npm run build` y subir el commit a la rama por defecto.
+2. En HACS, «Actualizar información» y luego «Descargar» la nueva versión; o
+   pídemelo y lo hago por MCP (`update_information` + `download`).
+3. Recargar la página. HACS versiona la URL del recurso con su propio
+   `hacstag`, así que la caché agresiva de `config/www` no es un problema: cada
+   versión descargada cambia la URL.
 
 ## Construir
 
@@ -49,7 +62,7 @@ npm run build
 
 | Salida | Para qué |
 |---|---|
-| `dist/panel.js` | módulo ES autocontenido: el que va en `config/www/entrenador/` |
+| `dist/panel.js` | módulo ES autocontenido: el que descarga HACS |
 | `dist/index.html` | página autónoma (desarrollo y artifact) |
 | `dist/resource.js` | el mismo módulo comprimido y autoextraíble, por si algún día interesa registrarlo como recurso en línea sin acceso a ficheros |
 
@@ -69,30 +82,18 @@ decisiones explícitas:
   el empaquetador y no cambia ni una línea del código de la aplicación. 200 kB
   menos.
 
-## Actualizar el panel
-
-1. `npm run build`.
-2. Copia `dist/panel.js` a `config/www/entrenador/panel.js`.
-3. Cambia la versión de la URL del recurso (`?v=0.2.1`) desde Ajustes →
-   Dashboards → Recursos, o dímelo y lo cambio por MCP.
-
-Los ficheros de `config/www` se sirven con **caché agresiva**: sin cambiar el
-parámetro de versión, el navegador y la app móvil seguirán usando el módulo
-antiguo.
-
 ## Recargas necesarias
 
 | Cambio | Recarga |
 |---|---|
-| Recurso de Lovelace (alta o cambio de versión) | recargar la página |
+| Nueva versión descargada con HACS | recargar la página del navegador |
 | Helpers creados por interfaz o MCP | ninguna |
-| Nuevo `panel.js` sin cambiar `?v=` | no sirve: hay que cambiar la versión |
 | `panel_custom` en `configuration.yaml` (alternativa de abajo) | reinicio completo |
 
 ## Alternativa: panel_custom en configuration.yaml
 
-La instalación de arriba (recurso + dashboard) no toca YAML y no necesita
-reinicio, así que es la recomendada. Si prefieres el registro clásico como
+La instalación de arriba (HACS + dashboard) no toca YAML, no necesita reinicio
+y se actualiza sola desde el repositorio, así que es la recomendada. Si prefieres el registro clásico como
 panel, en `docs/ha/configuration.yaml` está el fragmento con `panel_custom`
 (`name: entreno-panel`, `module_url: /local/entrenador/panel.js?v=0.2.1`,
 `embed_iframe: false`) y en `docs/ha/input_number.yaml` los mismos helpers en

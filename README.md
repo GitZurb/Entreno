@@ -56,6 +56,6 @@ implementa los setters `hass`, `narrow`, `route` y `panel`. Los ficheros de
 `config/www` se sirven con caché agresiva: versiona la URL del módulo
 (`/local/entrenador/panel.js?v=X.Y.Z`) en cada actualización.
 
-Instalado en la instancia como dashboard «Entreno» con recurso de Lovelace y los
-cinco helpers creados. Guía completa y estado: `docs/HOME_ASSISTANT.md`.
+Instalado con HACS como repositorio personalizado, con el dashboard «Entreno» y
+los cinco helpers creados. Guía completa y estado: `docs/HOME_ASSISTANT.md`.
 Fragmentos listos para copiar: `docs/ha/configuration.yaml` y `docs/ha/input_number.yaml`.
