@@ -26,8 +26,10 @@ import {
   Home, Dumbbell, Utensils, TrendingUp, Settings, Plus, Check, Timer, ChevronLeft,
   ChevronRight, Trophy, Copy, Trash2, Play, X, Search, Download, Upload, RefreshCw,
   Droplets, Scale, Calendar, AlertTriangle, Pencil, Minus, Flame, ShoppingCart,
-  Info, Wifi, WifiOff, ArrowUp, ArrowDown, Library, Layers, BookOpen, Repeat, ArrowUpDown,
-  SkipForward, CircleCheck, ListTodo, CalendarDays, Bell, Sparkles, Menu,
+  Info, Wifi, WifiOff, ArrowUp, ArrowDown, Library, Layers, BookOpen, Repeat,
+  SkipForward, CircleCheck, ListTodo, CalendarDays, Sparkles, Menu,
+  ChevronDown, ChevronUp, Circle, Footprints, Target, Activity,
+  Croissant, Salad, Soup, Apple,
 } from "lucide-react";
 
 const APP_VERSION = typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev";
@@ -54,106 +56,215 @@ entreno-panel{
   --e-ok-soft: color-mix(in srgb, var(--e-ok) 16%, transparent);
   --e-err-soft: color-mix(in srgb, var(--e-err) 14%, transparent);
   --e-warn-soft: color-mix(in srgb, var(--e-warn) 16%, transparent);
-  --e-r-card: 16px; --e-r-btn: 12px;
+  /* Escala de diseño: radios generosos, un solo hueco y una sombra muy suave.
+     Nada de bordes salvo donde separan datos (tablas, listas). */
+  --e-radius-sm: 12px;
+  --e-radius-md: 16px;
+  --e-radius-lg: 24px;
+  --e-radius-pill: 999px;
+  --e-gap: 14px;
+  --e-pad: 18px;
+  --e-shadow: 0 1px 2px rgba(0,0,0,.14);
+  --e-shadow-lift: 0 10px 30px rgba(0,0,0,.28);
+  --e-r-card: var(--e-radius-lg); --e-r-btn: var(--e-radius-pill);
   display:block; height:100vh; height:100dvh;
   background: var(--e-bg); color: var(--e-text);
-  font-family: var(--e-font); font-size:15px; line-height:1.4;
+  font-family: var(--e-font); font-size:15px; line-height:1.45;
   font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
 }
 entreno-panel > .e-host{ height:100%; }
 entreno-panel.e-card-mode{ height:calc(100vh - var(--header-height, 56px)); height:calc(100dvh - var(--header-height, 56px)); border-radius:0; }
-.e-topbar{ display:flex; align-items:center; gap:8px; height:48px; padding:0 8px; border-bottom:1px solid var(--e-div); background:var(--e-card); }
-.e-topbar b{ font-size:15px; }
+.e-topbar{ display:flex; align-items:center; gap:8px; height:52px; padding:0 10px; background:var(--e-bg); }
+.e-topbar b{ font-size:16px; font-weight:600; letter-spacing:-.01em; }
 entreno-panel *, entreno-panel *::before, entreno-panel *::after{ box-sizing:border-box; }
 entreno-panel button, entreno-panel input, entreno-panel select, entreno-panel textarea{
   font: inherit; color: inherit; font-variant-numeric: tabular-nums;
 }
 entreno-panel button{ cursor:pointer; background:none; border:0; padding:0; }
-entreno-panel button:focus-visible, entreno-panel input:focus-visible, entreno-panel select:focus-visible{
-  outline:2px solid var(--e-acc); outline-offset:2px;
+entreno-panel button:focus-visible, entreno-panel input:focus-visible, entreno-panel select:focus-visible, entreno-panel textarea:focus-visible, entreno-panel [tabindex]:focus-visible{
+  outline:2px solid var(--e-acc); outline-offset:2px; border-radius:var(--e-radius-sm);
 }
 entreno-panel ::placeholder{ color: var(--e-text2); opacity:.7; }
 entreno-panel h1, entreno-panel h2, entreno-panel h3, entreno-panel p{ margin:0; }
 
 .e-app{ height:100%; display:flex; flex-direction:column; }
 .e-main{ flex:1; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
-.e-page{ max-width:720px; margin:0 auto; padding:16px 16px 32px; display:flex; flex-direction:column; gap:16px; }
-.e-page.wide{ max-width:1040px; }
-@media (min-width:900px){ .e-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; } }
+.e-page{ max-width:760px; margin:0 auto; padding:14px 16px 28px; display:flex; flex-direction:column; gap:var(--e-gap); }
+.e-page.wide{ max-width:1120px; }
+.e-tabsbar{ max-width:760px; margin:0 auto; padding:12px 16px 0; }
 
-.e-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:52px; }
-.e-header h1{ font-size:22px; font-weight:600; letter-spacing:-.01em; text-wrap:balance; }
-.e-header .sub{ color:var(--e-text2); font-size:13px; }
-.e-header-actions{ display:flex; gap:6px; }
+/* Rejilla de 12 columnas. En móvil todo ocupa el ancho salvo lo marcado como
+   e-c3, que son las métricas compactas y van de dos en dos. */
+.e-grid{ display:grid; grid-template-columns:repeat(12, 1fr); gap:var(--e-gap); align-items:start; }
+.e-grid > *{ grid-column:span 12; min-width:0; }
+.e-grid > .e-c3{ grid-column:span 6; }
+@media (min-width:860px){
+  .e-grid > .e-c3{ grid-column:span 3; }
+  .e-grid > .e-c4{ grid-column:span 4; }
+  .e-grid > .e-c6{ grid-column:span 6; }
+  .e-grid > .e-c8{ grid-column:span 8; }
+}
+.e-grid2{ display:grid; grid-template-columns:repeat(12, 1fr); gap:var(--e-gap); align-items:start; }
+.e-grid2 > *{ grid-column:span 12; min-width:0; }
+@media (min-width:900px){ .e-grid2 > *{ grid-column:span 6; } }
 
-.e-nav{ flex:none; border-top:1px solid var(--e-div); background: var(--e-card); padding-bottom: env(safe-area-inset-bottom); }
-.e-nav-inner{ max-width:720px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); height:64px; }
-.e-nav button{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--e-text2); font-size:11px; font-weight:500; letter-spacing:.02em; transition:color .15s; }
+.e-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:52px; padding:2px 2px 0; }
+.e-header h1{ font-size:26px; font-weight:650; letter-spacing:-.02em; text-wrap:balance; line-height:1.15; }
+.e-header .sub{ color:var(--e-text2); font-size:13px; margin-top:2px; }
+.e-header-actions{ display:flex; gap:4px; }
+.e-greet{ font-size:14px; color:var(--e-text2); font-weight:500; }
+
+/* Navegación: barra flotante con pill para la sección activa. */
+.e-nav{ flex:none; background:transparent; padding:6px 12px calc(8px + env(safe-area-inset-bottom)); }
+.e-nav-inner{ max-width:520px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:2px;
+  background:var(--e-card); border-radius:var(--e-radius-pill); padding:6px; box-shadow:var(--e-shadow-lift); }
+.e-nav button{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:4px 0 6px;
+  color:var(--e-text2); font-size:11px; font-weight:500; letter-spacing:.01em; border-radius:var(--e-radius-pill); transition:color .18s; }
+.e-nav button .ico{ display:inline-flex; align-items:center; justify-content:center; position:relative; width:52px; height:28px;
+  border-radius:var(--e-radius-pill); transition:background .2s ease; }
 .e-nav button.on{ color:var(--e-acc); }
-.e-nav button svg{ width:22px; height:22px; }
+.e-nav button.on .ico{ background:var(--e-acc-soft); }
+.e-nav button svg{ width:21px; height:21px; }
+.e-nav .dot{ position:absolute; top:1px; right:11px; width:7px; height:7px; border-radius:50%; background:var(--e-ok); }
+@media (min-width:860px){
+  .e-nav{ padding:8px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .e-nav-inner{ max-width:620px; }
+  .e-nav button{ flex-direction:row; gap:8px; font-size:13px; padding:8px 0; }
+  .e-nav button .ico{ width:auto; height:auto; background:none !important; }
+  .e-nav button.on{ background:var(--e-acc-soft); }
+}
 
-.e-card{ background:var(--e-card); border-radius:var(--e-r-card); padding:16px; display:flex; flex-direction:column; gap:12px; }
-.e-card.flush{ padding:0; overflow:hidden; }
-.e-card.accent{ background: var(--e-acc-soft); }
-.e-card-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.e-card-title{ font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--e-text2); }
-.e-card-title.big{ font-size:17px; text-transform:none; letter-spacing:0; color:var(--e-text); }
+/* ---- Bubble card: la pieza base de toda la interfaz ---- */
+.e-bubble{ background:var(--e-card); border-radius:var(--e-radius-lg); padding:var(--e-pad);
+  display:flex; flex-direction:column; gap:var(--e-gap); box-shadow:var(--e-shadow); position:relative;
+  animation:e-rise .22s ease-out both; }
+.e-bubble.flush{ padding:0; overflow:hidden; }
+.e-bubble.accent{ background:var(--e-acc-soft); box-shadow:none; }
+.e-bubble.plain{ background:transparent; box-shadow:none; padding:0; }
+.e-bubble.tap{ text-align:left; width:100%; color:inherit; transition:transform .14s ease, background .18s; }
+.e-bubble.tap:active{ transform:scale(.99); }
+.e-bubble-head{ display:flex; align-items:flex-start; gap:12px; }
+.e-bubble.flush > .e-bubble-head{ padding:var(--e-pad) var(--e-pad) 0; }
+.e-bubble-head .txt{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.e-bubble-head .act{ display:flex; align-items:center; gap:6px; flex:none; margin-left:auto; }
+.e-bubble-title{ font-size:12px; font-weight:650; text-transform:uppercase; letter-spacing:.07em; color:var(--e-text2); }
+.e-bubble-title.big{ font-size:17px; text-transform:none; letter-spacing:-.01em; color:var(--e-text); font-weight:600; }
+.e-bubble-sub{ font-size:13px; color:var(--e-text2); }
+/* Burbuja del icono */
+.e-ico{ flex:none; width:40px; height:40px; border-radius:var(--e-radius-pill); display:inline-flex; align-items:center; justify-content:center;
+  background:var(--e-acc-soft); color:var(--e-acc); }
+.e-ico svg{ width:20px; height:20px; }
+.e-ico.sm{ width:32px; height:32px; } .e-ico.sm svg{ width:17px; height:17px; }
+.e-ico.ok{ background:var(--e-ok-soft); color:var(--e-ok); }
+.e-ico.warn{ background:var(--e-warn-soft); color:var(--e-warn); }
+.e-ico.err{ background:var(--e-err-soft); color:var(--e-err); }
+.e-ico.mute{ background:var(--e-card2); color:var(--e-text2); }
+@keyframes e-rise{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:none } }
 
-.e-big{ font-size:56px; font-weight:600; line-height:1; letter-spacing:-.02em; }
-.e-big.md{ font-size:40px; }
-.e-big.sm{ font-size:28px; }
+/* ---- Métricas compactas ---- */
+.e-metric{ gap:10px; }
+.e-metric .lab{ font-size:13px; color:var(--e-text2); font-weight:500; }
+.e-metric .val{ font-size:28px; font-weight:650; letter-spacing:-.02em; line-height:1.05; display:flex; align-items:baseline; gap:4px; }
+.e-metric .val .u{ font-size:13px; font-weight:500; color:var(--e-text2); }
+.e-metric .foot{ display:flex; align-items:center; gap:6px; min-height:18px; }
+.e-metric.tap{ cursor:pointer; }
+.e-metric .foot .e-bar{ flex:1; }
+.e-metric .foot svg{ flex:none; }
+
+/* ---- Barras de progreso ---- */
+.e-prog{ display:flex; flex-direction:column; gap:8px; }
+.e-prog .top{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:13px; }
+.e-prog .top .l{ color:var(--e-text2); }
+.e-prog .top .v{ font-weight:650; }
+.e-bar{ height:8px; border-radius:var(--e-radius-pill); background:var(--e-card2); overflow:hidden; }
+.e-bar.lg{ height:10px; }
+.e-bar > i{ display:block; height:100%; border-radius:var(--e-radius-pill); background:var(--e-acc); transition:width .45s cubic-bezier(.4,0,.2,1); }
+.e-bar > i.over{ background:var(--e-err); }
+.e-bar.seg{ display:flex; gap:4px; background:none; overflow:visible; }
+.e-bar.seg i{ flex:1; background:var(--e-card2); border-radius:var(--e-radius-pill); transition:background .25s; }
+.e-bar.seg i.ok{ background:var(--e-ok); }
+
+/* ---- Ejercicios ---- */
+.e-ex-head{ display:flex; align-items:flex-start; gap:12px; width:100%; text-align:left; color:inherit; }
+.e-ex-n{ flex:none; font-size:12px; font-weight:700; color:var(--e-text2); letter-spacing:.08em; min-width:22px; padding-top:3px; }
+.e-ex-name{ font-size:17px; font-weight:600; letter-spacing:-.01em; }
+.e-ex-meta{ font-size:13px; color:var(--e-text2); }
+.e-ex-state{ flex:none; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  background:var(--e-card2); color:var(--e-text2); margin-top:2px; transition:background .2s, color .2s; }
+.e-ex-state svg{ width:15px; height:15px; }
+.e-ex-state.on{ background:var(--e-ok); color:var(--e-bg); }
+.e-ex-state.cur{ background:var(--e-acc-soft); color:var(--e-acc); }
+.e-next-item{ display:flex; align-items:center; gap:12px; padding:9px 0; }
+.e-next-item + .e-next-item{ border-top:1px solid var(--e-div); }
+.e-next-item .nm{ flex:1; min-width:0; }
+.e-next-item.done .nm{ color:var(--e-text2); }
+.e-exercise{ gap:12px; }
+.e-exercise > button{ border-radius:var(--e-radius-md); }
+.e-exercise > button:active .e-ex-name{ opacity:.7; }
+.e-workout .e-bubble-title{ letter-spacing:.08em; }
+
+.e-big{ font-size:52px; font-weight:650; line-height:1; letter-spacing:-.03em; }
+.e-big.md{ font-size:38px; }
+.e-big.sm{ font-size:26px; }
 .e-unit{ font-size:15px; font-weight:500; color:var(--e-text2); margin-left:4px; }
 .e-muted{ color:var(--e-text2); font-size:13px; }
-.e-label{ font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--e-text2); }
+.e-label{ font-size:11px; font-weight:650; text-transform:uppercase; letter-spacing:.07em; color:var(--e-text2); }
 .e-row{ display:flex; align-items:center; gap:8px; }
 .e-row.between{ justify-content:space-between; }
 .e-row.wrap{ flex-wrap:wrap; }
 .e-col{ display:flex; flex-direction:column; gap:8px; }
-.e-stack{ display:flex; flex-direction:column; gap:4px; }
+.e-stack{ display:flex; flex-direction:column; gap:3px; }
 .e-grow{ flex:1; min-width:0; }
 .e-right{ text-align:right; }
 .e-ellip{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-.e-btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:0 18px; border-radius:var(--e-r-btn); font-weight:600; font-size:15px; transition:transform .12s, background .15s, opacity .15s; user-select:none; -webkit-tap-highlight-color:transparent; white-space:nowrap; }
+.e-btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:46px; padding:0 20px; border-radius:var(--e-radius-pill);
+  font-weight:600; font-size:15px; transition:transform .12s ease, background .18s, opacity .15s; user-select:none;
+  -webkit-tap-highlight-color:transparent; white-space:nowrap; }
 .e-btn:active{ transform:scale(.97); }
 .e-btn.primary{ background:var(--e-acc); color:#fff; }
 .e-btn.soft{ background:var(--e-acc-soft); color:var(--e-acc); }
 .e-btn.ghost{ background:var(--e-card2); color:var(--e-text); }
-.e-btn.outline{ border:1px solid var(--e-div); color:var(--e-text); }
+.e-btn.outline{ background:transparent; box-shadow:inset 0 0 0 1px var(--e-div); color:var(--e-text); }
 .e-btn.danger{ background:var(--e-err-soft); color:var(--e-err); }
 .e-btn.ok{ background:var(--e-ok); color:#0B0D10; }
-.e-btn.sm{ min-height:36px; padding:0 12px; font-size:13px; border-radius:10px; }
-.e-btn.xs{ min-height:30px; padding:0 10px; font-size:12px; border-radius:8px; font-weight:500; }
+.e-btn.sm{ min-height:36px; padding:0 14px; font-size:13px; }
+.e-btn.xs{ min-height:30px; padding:0 12px; font-size:12px; font-weight:500; }
 .e-btn.full{ width:100%; }
 .e-btn:disabled{ opacity:.45; cursor:not-allowed; }
 .e-btn svg{ width:18px; height:18px; flex:none; }
-.e-btn.sm svg, .e-btn.xs svg{ width:16px; height:16px; }
-.e-icon-btn{ width:44px; height:44px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; color:var(--e-text2); transition:background .15s, color .15s; }
+.e-btn.sm svg, .e-btn.xs svg{ width:15px; height:15px; }
+.e-icon-btn{ width:44px; height:44px; border-radius:var(--e-radius-pill); display:inline-flex; align-items:center; justify-content:center;
+  color:var(--e-text2); transition:background .18s, color .18s; }
 .e-icon-btn:hover, .e-icon-btn.on{ background:var(--e-card2); color:var(--e-text); }
 .e-icon-btn svg{ width:20px; height:20px; }
-.e-icon-btn.sm{ width:36px; height:36px; border-radius:10px; }
+.e-icon-btn.sm{ width:36px; height:36px; }
 .e-icon-btn.sm svg{ width:18px; height:18px; }
 
-.e-chip{ display:inline-flex; align-items:center; gap:4px; height:26px; padding:0 10px; border-radius:999px; font-size:12px; font-weight:500; background:var(--e-card2); color:var(--e-text2); white-space:nowrap; }
+.e-chip{ display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 12px; border-radius:var(--e-radius-pill); font-size:12px;
+  font-weight:500; background:var(--e-card2); color:var(--e-text2); white-space:nowrap; }
 .e-chip.acc{ background:var(--e-acc-soft); color:var(--e-acc); }
 .e-chip.ok{ background:var(--e-ok-soft); color:var(--e-ok); }
 .e-chip.err{ background:var(--e-err-soft); color:var(--e-err); }
 .e-chip.warn{ background:var(--e-warn-soft); color:var(--e-warn); }
 .e-chip svg{ width:13px; height:13px; }
+.e-chip .pt{ width:7px; height:7px; border-radius:50%; background:currentColor; flex:none; }
 .e-chips{ display:flex; gap:6px; flex-wrap:wrap; }
 .e-chips.scroll{ flex-wrap:nowrap; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
 .e-chips.scroll::-webkit-scrollbar{ display:none; }
-button.e-chip{ height:34px; padding:0 14px; font-size:13px; }
-button.e-chip.on{ background:var(--e-acc); color:#fff; }
+button.e-chip{ height:34px; padding:0 14px; font-size:13px; transition:background .18s, color .18s; }
+button.e-chip.on{ background:var(--e-acc-soft); color:var(--e-acc); font-weight:600; }
 
-.e-seg{ display:flex; background:var(--e-card2); border-radius:12px; padding:3px; gap:2px; }
-.e-seg button{ flex:1; min-height:38px; border-radius:9px; font-size:13px; font-weight:600; color:var(--e-text2); transition:background .15s, color .15s; }
-.e-seg button.on{ background:var(--e-card); color:var(--e-text); box-shadow:0 1px 2px rgba(0,0,0,.3); }
+.e-seg{ display:flex; background:var(--e-card); border-radius:var(--e-radius-pill); padding:4px; gap:2px; box-shadow:var(--e-shadow); }
+.e-seg button{ flex:1; min-height:36px; border-radius:var(--e-radius-pill); font-size:13px; font-weight:600; color:var(--e-text2);
+  transition:background .2s, color .2s; }
+.e-seg button.on{ background:var(--e-acc-soft); color:var(--e-acc); }
 
 .e-field{ display:flex; flex-direction:column; gap:6px; }
-.e-field > label{ font-size:12px; font-weight:600; color:var(--e-text2); letter-spacing:.03em; }
-.e-input, .e-select, .e-textarea{ width:100%; min-height:46px; padding:0 14px; border-radius:12px; background:var(--e-card2); border:1px solid transparent; color:var(--e-text); font-size:15px; transition:border-color .15s; }
+.e-field > label{ font-size:12px; font-weight:600; color:var(--e-text2); letter-spacing:.02em; }
+.e-input, .e-select, .e-textarea{ width:100%; min-height:46px; padding:0 14px; border-radius:var(--e-radius-md); background:var(--e-card2);
+  border:1px solid transparent; color:var(--e-text); font-size:15px; transition:border-color .15s, background .15s; }
 .e-textarea{ padding:12px 14px; min-height:120px; resize:vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; }
 .e-input:focus, .e-select:focus, .e-textarea:focus{ border-color:var(--e-acc); outline:none; }
 .e-input.err{ border-color:var(--e-err); }
@@ -163,96 +274,99 @@ button.e-chip.on{ background:var(--e-acc); color:#fff; }
 .e-input::-webkit-outer-spin-button, .e-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 .e-fields{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; }
 .e-toggle{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; }
-.e-toggle .track{ width:46px; height:28px; border-radius:999px; background:var(--e-card2); position:relative; transition:background .15s; flex:none; border:1px solid var(--e-div); }
-.e-toggle .track::after{ content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:var(--e-text2); transition:transform .15s, background .15s; }
-.e-toggle.on .track{ background:var(--e-acc); border-color:var(--e-acc); }
+.e-toggle .track{ width:46px; height:28px; border-radius:var(--e-radius-pill); background:var(--e-card2); position:relative; transition:background .2s; flex:none; }
+.e-toggle .track::after{ content:""; position:absolute; top:4px; left:4px; width:20px; height:20px; border-radius:50%; background:var(--e-text2); transition:transform .2s ease, background .2s; }
+.e-toggle.on .track{ background:var(--e-acc); }
 .e-toggle.on .track::after{ transform:translateX(18px); background:#fff; }
 
 .e-list{ display:flex; flex-direction:column; }
 .e-list > *{ border-top:1px solid var(--e-div); }
 .e-list > *:first-child{ border-top:0; }
-.e-item{ display:flex; align-items:center; gap:12px; min-height:56px; padding:10px 16px; width:100%; text-align:left; color:inherit; transition:background .12s; }
+.e-item{ display:flex; align-items:center; gap:12px; min-height:56px; padding:10px var(--e-pad); width:100%; text-align:left; color:inherit; transition:background .15s; }
 button.e-item:hover{ background:var(--e-card2); }
 .e-item .t{ font-weight:500; }
 .e-item .s{ font-size:13px; color:var(--e-text2); }
 .e-item .v{ font-weight:600; white-space:nowrap; }
 
-.e-sets{ display:grid; grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) 56px 44px 52px; gap:6px; align-items:center; }
-.e-sets .h{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--e-text2); text-align:center; }
+/* ---- Rejilla de series ---- */
+.e-sets{ display:grid; grid-template-columns:30px minmax(0,1fr) minmax(0,1fr) 54px 42px 52px; gap:6px; align-items:center; }
+.e-sets .h{ font-size:11px; font-weight:650; text-transform:uppercase; letter-spacing:.06em; color:var(--e-text2); text-align:center; padding-bottom:2px; }
 .e-set-row{ display:contents; }
-.e-set-row .n{ text-align:center; color:var(--e-text2); font-weight:600; font-size:13px; height:52px; display:flex; align-items:center; justify-content:center; gap:2px; }
+.e-set-row .n{ text-align:center; color:var(--e-text2); font-weight:650; font-size:13px; height:50px; display:flex; align-items:center; justify-content:center; gap:2px; }
 .e-set-row .n svg{ width:14px; height:14px; color:var(--e-warn); }
-.e-cell{ height:52px; border-radius:10px; background:var(--e-card2); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; width:100%; text-align:center; border:1px solid transparent; transition:background .15s, border-color .15s; padding:0 4px; }
+.e-cell{ height:50px; border-radius:var(--e-radius-md); background:var(--e-card2); display:flex; align-items:center; justify-content:center;
+  font-weight:600; font-size:17px; width:100%; text-align:center; border:1px solid transparent; transition:background .2s, border-color .15s; padding:0 4px; }
 .e-cell.ph{ color:var(--e-text2); font-weight:500; }
+.e-cell[type=number]{ -moz-appearance:textfield; }
+.e-cell::-webkit-outer-spin-button, .e-cell::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 .e-cell.err{ border-color:var(--e-err); }
 .e-cell:focus{ border-color:var(--e-acc); outline:none; }
 .e-cell .u{ font-size:11px; color:var(--e-text2); font-weight:500; margin-left:3px; }
 .e-set-row.done .e-cell{ background:var(--e-ok-soft); }
-.e-check{ height:52px; width:100%; border-radius:10px; background:var(--e-card2); display:flex; align-items:center; justify-content:center; color:var(--e-text2); transition:background .18s, color .18s, transform .18s; }
+.e-check{ height:50px; width:100%; border-radius:var(--e-radius-md); background:var(--e-card2); display:flex; align-items:center; justify-content:center;
+  color:var(--e-text2); transition:background .2s, color .2s, transform .18s; }
 .e-check.on{ background:var(--e-ok); color:#0B0D10; animation:e-pop .18s ease-out; }
 .e-check svg{ width:22px; height:22px; }
 @keyframes e-pop{ 0%{transform:scale(.9)} 60%{transform:scale(1.06)} 100%{transform:scale(1)} }
-.e-copy{ height:52px; width:100%; border-radius:10px; background:var(--e-card2); display:flex; align-items:center; justify-content:center; color:var(--e-text2); }
+.e-copy{ height:50px; width:100%; border-radius:var(--e-radius-md); background:var(--e-card2); display:flex; align-items:center; justify-content:center; color:var(--e-text2); }
 .e-copy svg{ width:18px; height:18px; }
 .e-copy:hover{ color:var(--e-text); }
 
 .e-sheet-bg{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:50; display:flex; align-items:flex-end; justify-content:center; animation:e-fade .15s ease-out; }
-.e-sheet{ width:100%; max-width:720px; max-height:92dvh; background:var(--e-card); border-radius:20px 20px 0 0; display:flex; flex-direction:column; animation:e-up .2s ease-out; padding-bottom: env(safe-area-inset-bottom); }
-@media (min-width:720px){ .e-sheet-bg{ align-items:center; } .e-sheet{ border-radius:20px; max-height:86vh; } }
-.e-sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px 8px; gap:8px; }
-.e-sheet-head h2{ font-size:17px; font-weight:600; }
-.e-sheet-body{ overflow-y:auto; padding:8px 16px 20px; display:flex; flex-direction:column; gap:12px; }
+.e-sheet{ width:100%; max-width:720px; max-height:92dvh; background:var(--e-card); border-radius:26px 26px 0 0; display:flex; flex-direction:column; animation:e-up .22s ease-out; padding-bottom: env(safe-area-inset-bottom); }
+@media (min-width:720px){ .e-sheet-bg{ align-items:center; } .e-sheet{ border-radius:26px; max-height:86vh; } }
+.e-sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px 8px; gap:8px; }
+.e-sheet-head h2{ font-size:18px; font-weight:600; letter-spacing:-.01em; }
+.e-sheet-body{ overflow-y:auto; padding:8px 18px 20px; display:flex; flex-direction:column; gap:12px; }
 @keyframes e-up{ from{ transform:translateY(24px); opacity:0 } to{ transform:none; opacity:1 } }
 @keyframes e-fade{ from{ opacity:0 } to{ opacity:1 } }
-@media (prefers-reduced-motion: reduce){ .e-sheet, .e-sheet-bg, .e-check.on{ animation:none; } }
 
-.e-toasts{ position:fixed; left:50%; bottom:88px; transform:translateX(-50%); z-index:60; display:flex; flex-direction:column; gap:8px; width:min(92vw, 480px); pointer-events:none; }
-.e-toast{ background:var(--e-card2); color:var(--e-text); border-radius:12px; padding:10px 14px; font-size:13px; display:flex; gap:10px; align-items:flex-start; box-shadow:0 6px 24px rgba(0,0,0,.4); border-left:3px solid var(--e-acc); pointer-events:auto; animation:e-up .2s ease-out; }
+.e-toasts{ position:fixed; left:50%; bottom:96px; transform:translateX(-50%); z-index:60; display:flex; flex-direction:column; gap:8px; width:min(92vw, 480px); pointer-events:none; }
+.e-toast{ background:var(--e-card); color:var(--e-text); border-radius:var(--e-radius-md); padding:12px 14px; font-size:13px; display:flex; gap:10px;
+  align-items:flex-start; box-shadow:var(--e-shadow-lift); border-left:3px solid var(--e-acc); pointer-events:auto; animation:e-up .2s ease-out; }
 .e-toast.err{ border-left-color:var(--e-err); }
 .e-toast.ok{ border-left-color:var(--e-ok); }
 .e-toast.warn{ border-left-color:var(--e-warn); }
 .e-toast svg{ width:16px; height:16px; flex:none; margin-top:1px; }
 
 .e-loads{ display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr)); gap:8px; }
-.e-load{ min-height:64px; border-radius:12px; background:var(--e-card2); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:1px solid transparent; transition:border-color .12s, background .12s; }
+.e-load{ min-height:64px; border-radius:var(--e-radius-md); background:var(--e-card2); display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:2px; border:1px solid transparent; transition:border-color .15s, background .15s; }
 .e-load.on{ border-color:var(--e-acc); background:var(--e-acc-soft); }
 .e-load.cur{ border-color:var(--e-div); }
-.e-load .kg{ font-size:19px; font-weight:600; }
+.e-load .kg{ font-size:19px; font-weight:650; }
 .e-load .pl{ font-size:11px; color:var(--e-text2); }
 
-.e-timer{ position:fixed; inset:0; z-index:55; background:var(--e-bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; padding:24px; text-align:center; }
-.e-timer .t{ font-size:96px; font-weight:600; line-height:1; letter-spacing:-.03em; }
+.e-timer{ position:fixed; inset:0; z-index:55; background:var(--e-bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:24px; text-align:center; }
+.e-timer .t{ font-size:96px; font-weight:650; line-height:1; letter-spacing:-.04em; }
 .e-timer .ring{ position:relative; }
-.e-timer .ring .t{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:64px; }
+.e-timer .ring .t{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:60px; }
 
 .e-week{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
 .e-week .d{ display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11px; color:var(--e-text2); font-weight:600; }
-.e-week .dot{ width:30px; height:30px; border-radius:50%; background:var(--e-card2); display:flex; align-items:center; justify-content:center; color:transparent; }
+.e-week .dot{ width:32px; height:32px; border-radius:var(--e-radius-pill); background:var(--e-card2); display:flex; align-items:center; justify-content:center; color:transparent; transition:background .2s; }
 .e-week .dot.on{ background:var(--e-ok); color:#0B0D10; }
 .e-week .dot.today{ box-shadow:0 0 0 2px var(--e-acc); }
 .e-week .dot svg{ width:16px; height:16px; }
 
 .e-cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
 .e-cal .wd{ text-align:center; font-size:11px; color:var(--e-text2); font-weight:600; padding:4px 0; }
-.e-cal .day{ aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:14px; font-weight:500; color:var(--e-text); }
+.e-cal .day{ aspect-ratio:1; border-radius:var(--e-radius-md); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:14px; font-weight:500; color:var(--e-text); transition:background .15s; }
 .e-cal .day.out{ color:var(--e-text2); opacity:.4; }
 .e-cal .day.today{ box-shadow:inset 0 0 0 2px var(--e-acc); }
-.e-cal .day.on{ background:var(--e-ok-soft); color:var(--e-ok); font-weight:600; }
+.e-cal .day.on{ background:var(--e-ok-soft); color:var(--e-ok); font-weight:650; }
 .e-cal .day.sel{ background:var(--e-card2); }
 .e-cal .day .m{ width:5px; height:5px; border-radius:50%; background:currentColor; opacity:0; }
 .e-cal .day.on .m{ opacity:1; }
 
-.e-bar{ height:8px; border-radius:999px; background:var(--e-card2); overflow:hidden; }
-.e-bar > i{ display:block; height:100%; border-radius:999px; background:var(--e-acc); transition:width .3s; }
-.e-bar > i.over{ background:var(--e-err); }
 .e-macro{ display:flex; flex-direction:column; gap:6px; }
 .e-macro .top{ display:flex; justify-content:space-between; font-size:13px; }
-.e-macro .top b{ font-weight:600; }
+.e-macro .top b{ font-weight:650; }
 
-.e-rings{ display:flex; align-items:center; gap:16px; }
+.e-rings{ display:flex; align-items:center; gap:18px; }
 .e-ring{ position:relative; display:inline-flex; align-items:center; justify-content:center; flex:none; }
 .e-ring .c{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; }
-.e-ring .c b{ font-size:22px; font-weight:600; }
+.e-ring .c b{ font-size:22px; font-weight:650; }
 .e-ring .c span{ font-size:11px; color:var(--e-text2); margin-top:3px; }
 
 .e-hero{ display:flex; align-items:baseline; gap:6px; }
@@ -262,30 +376,29 @@ button.e-item:hover{ background:var(--e-card2); }
 
 .e-pr{ display:inline-flex; align-items:center; gap:4px; color:var(--e-warn); font-size:12px; font-weight:600; }
 .e-pr svg{ width:14px; height:14px; }
-.e-note{ font-size:13px; color:var(--e-text2); display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:var(--e-card2); }
+.e-note{ font-size:13px; color:var(--e-text2); display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:var(--e-radius-md); background:var(--e-card2); }
 .e-note.acc{ color:var(--e-text); background:var(--e-acc-soft); }
 .e-note.err{ background:var(--e-err-soft); color:var(--e-text); }
 .e-note.warn{ background:var(--e-warn-soft); color:var(--e-text); }
 .e-note svg{ width:16px; height:16px; flex:none; margin-top:1px; color:var(--e-text2); }
 .e-note.acc svg{ color:var(--e-acc); } .e-note.err svg{ color:var(--e-err); } .e-note.warn svg{ color:var(--e-warn); }
 
-.e-empty{ padding:32px 16px; text-align:center; color:var(--e-text2); font-size:14px; display:flex; flex-direction:column; align-items:center; gap:10px; }
-.e-empty svg{ width:28px; height:28px; opacity:.6; }
+.e-empty{ padding:34px 16px; text-align:center; color:var(--e-text2); font-size:14px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+.e-empty svg{ width:26px; height:26px; opacity:.55; }
 .e-table{ width:100%; border-collapse:collapse; font-size:13px; }
-.e-table th{ text-align:left; font-weight:600; color:var(--e-text2); font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding:6px 0; border-bottom:1px solid var(--e-div); }
-.e-table td{ padding:8px 0; border-bottom:1px solid var(--e-div); }
+.e-table th{ text-align:left; font-weight:650; color:var(--e-text2); font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding:6px 0; border-bottom:1px solid var(--e-div); }
+.e-table td{ padding:9px 0; border-bottom:1px solid var(--e-div); }
+.e-table tr:last-child td{ border-bottom:0; }
 .e-table td.r, .e-table th.r{ text-align:right; }
-.e-chart{ width:100%; height:200px; }
-.e-chart.tall{ height:240px; }
-.e-tooltip{ background:var(--e-card2); border-radius:10px; padding:8px 10px; font-size:12px; box-shadow:0 4px 16px rgba(0,0,0,.4); }
-.e-tooltip b{ font-weight:600; }
+.e-chart{ width:100%; height:180px; }
+.e-chart.tall{ height:220px; }
+.e-tooltip{ background:var(--e-card2); border-radius:var(--e-radius-sm); padding:8px 10px; font-size:12px; box-shadow:var(--e-shadow-lift); }
+.e-tooltip b{ font-weight:650; }
 .e-countup{ animation:e-fade .4s ease-out; }
 .e-kbd{ font-family: ui-monospace, Menlo, monospace; font-size:12px; background:var(--e-card2); padding:2px 6px; border-radius:6px; }
-.e-status-dot{ width:8px; height:8px; border-radius:50%; background:var(--e-text2); display:inline-block; }
-.e-status-dot.on{ background:var(--e-ok); } .e-status-dot.err{ background:var(--e-err); }
 .e-spacer{ flex:1; }
-.e-thumb{ flex:none; width:64px; height:48px; border-radius:10px; background:var(--e-card2); display:flex; align-items:center; justify-content:center; overflow:hidden; }
-.e-thumb.sm{ width:52px; height:39px; border-radius:8px; }
+.e-thumb{ flex:none; width:60px; height:46px; border-radius:var(--e-radius-sm); background:var(--e-card2); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.e-thumb.sm{ width:50px; height:38px; }
 .e-thumb svg{ width:100%; height:100%; }
 .e-timeline{ display:grid; grid-template-columns:repeat(26,1fr); gap:3px; }
 .e-timeline i{ display:block; aspect-ratio:1; border-radius:3px; background:var(--e-card2); }
@@ -295,13 +408,16 @@ button.e-item:hover{ background:var(--e-card2); }
 .e-timeline i.missed{ background:var(--e-err-soft) !important; box-shadow: inset 0 0 0 1px var(--e-err); }
 .e-timeline span{ font-size:9px; color:var(--e-text2); text-align:center; }
 .e-blockbar{ display:flex; gap:3px; height:12px; }
-.e-blockbar i{ flex:1; border-radius:3px; opacity:.3; }
+.e-blockbar i{ flex:1; border-radius:4px; opacity:.3; }
 .e-blockbar i.past{ opacity:1; }
 .e-blockbar i.now{ opacity:1; box-shadow:0 0 0 2px var(--e-text); }
 .e-daydots{ display:flex; gap:6px; }
 .e-daydots i{ width:14px; height:14px; border-radius:50%; background:var(--e-card2); display:block; }
 .e-daydots i.done{ background:var(--e-ok); } .e-daydots i.missed{ background:var(--e-err); opacity:.7; } .e-daydots i.skipped{ background:var(--e-div); } .e-daydots i.today{ box-shadow:0 0 0 2px var(--e-acc); }
-.e-hero-card{ border-left:4px solid var(--e-acc); }
+
+@media (prefers-reduced-motion: reduce){
+  entreno-panel *, entreno-panel *::before, entreno-panel *::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+}
 `;
 
 // La hoja de estilos se inserta dentro del propio elemento: así se aplica igual
@@ -333,6 +449,7 @@ const fmtN = (x, d = 0) => (x == null || Number.isNaN(x) ? "–" : Number(x).toL
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const sum = (arr) => arr.reduce((a, b) => a + b, 0);
 const fmtSecs = (s) => `${Math.floor(s / 60)}:${pad2(s % 60)}`;
+const saludo = (d = new Date()) => { const h = d.getHours(); return h < 6 ? "Buenas noches" : h < 13 ? "Buenos días" : h < 21 ? "Buenas tardes" : "Buenas noches"; };
 const num = (v, fallback = 0) => { const n = typeof v === "number" ? v : parseFloat(String(v).replace(",", ".")); return Number.isFinite(n) ? n : fallback; };
 
 /* =============================================================================
@@ -1654,24 +1771,142 @@ function useWeightSeries() {
 /* =============================================================================
  * PRIMITIVAS DE INTERFAZ
  * ========================================================================== */
-const Card = ({ title, big, action, children, className = "", flush, accent }) => (
-  <section className={`e-card ${flush ? "flush" : ""} ${accent ? "accent" : ""} ${className}`}>
-    {(title || action) && (
-      <div className="e-card-head" style={flush ? { padding: "16px 16px 0" } : undefined}>
-        {title && <h2 className={`e-card-title ${big ? "big" : ""}`}>{title}</h2>}
-        {action}
-      </div>
-    )}
-    {children}
-  </section>
+/* ---------- Sistema Bubble ----------
+ * Una sola pieza base (BubbleCard) y cuatro derivadas para los casos que se
+ * repiten en todas las pantallas: métricas, progreso, entrenamiento y
+ * ejercicio. Nada de tarjeta por dato suelto: se agrupa lo relacionado.
+ * -------------------------------------------------------------------------- */
+
+// Burbuja circular del icono. `kind` la tiñe con los colores de estado.
+const IconBubble = ({ icon: I, kind = "", small }) => (I ? <span className={`e-ico ${kind} ${small ? "sm" : ""}`}><I /></span> : null);
+
+// Cabecera de sección, fuera de tarjeta: rotula un grupo sin gastar una burbuja.
+const SectionHeader = ({ title, sub, action }) => (
+  <div className="e-row between" style={{ padding: "4px 4px 0" }}>
+    <div className="e-stack"><span className="e-bubble-title">{title}</span>{sub && <span className="e-bubble-sub">{sub}</span>}</div>
+    {action}
+  </div>
 );
+
+// Estado en una línea: punto de color o icono y etiqueta.
+const StatusBadge = ({ kind = "", icon: I, dot, children, ...rest }) => (
+  <span className={`e-chip ${kind}`} {...rest}>{dot && <span className="pt" />}{I && <I />}{children}</span>
+);
+
+// Acción discreta para las cabeceras: pastilla si lleva texto, icono si no.
+const ActionButton = ({ icon, label, children, variant = "soft", size = "sm", ...rest }) => (
+  children ? <Btn variant={variant} size={size} icon={icon} aria-label={label} {...rest}>{children}</Btn>
+    : <IconBtn icon={icon} label={label} small {...rest} />
+);
+
+// Barra de progreso. `tone` permite teñirla (objetivo cumplido, aviso…).
+const ProgressBar = ({ value, max, tone, big }) => (
+  <div className={`e-bar ${big ? "lg" : ""}`}>
+    <i className={max > 0 && value > max ? "over" : ""} style={{ width: `${max > 0 ? clamp((value / max) * 100, 0, 100) : 0}%`, background: tone }} />
+  </div>
+);
+
+// Progreso por tramos: una marca por serie o sesión, más legible que un %.
+const SegmentBar = ({ total, done }) => (
+  <div className="e-bar seg" aria-hidden="true">
+    {Array.from({ length: Math.max(0, total) }, (_, i) => <i key={i} className={i < done ? "ok" : ""} />)}
+  </div>
+);
+
+// Pieza base: icono en burbuja, título, subtítulo, acción y contenido.
+function BubbleCard({ icon, iconKind, title, titleBig, subtitle, action, children, className = "", flush, accent, ...rest }) {
+  const head = icon || title || subtitle || action;
+  return (
+    <section className={`e-bubble ${flush ? "flush" : ""} ${accent ? "accent" : ""} ${className}`} {...rest}>
+      {head && (
+        <div className="e-bubble-head">
+          <IconBubble icon={icon} kind={iconKind} />
+          <div className="txt">
+            {title && <h2 className={`e-bubble-title ${titleBig ? "big" : ""}`}>{title}</h2>}
+            {subtitle && <span className="e-bubble-sub">{subtitle}</span>}
+          </div>
+          {action && <div className="act">{action}</div>}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+// Métrica compacta: icono, etiqueta, valor grande y un pie con la tendencia.
+function MetricBubble({ icon, iconKind, label, value, unit, foot, onClick, title, className = "" }) {
+  const inner = (<>
+    <IconBubble icon={icon} kind={iconKind} small />
+    <span className="lab">{label}</span>
+    <span className="val">{value}{unit && <span className="u">{unit}</span>}</span>
+    <span className="foot">{foot}</span>
+  </>);
+  if (onClick) return <button type="button" className={`e-bubble e-metric tap ${className}`} onClick={onClick} title={title}>{inner}</button>;
+  return <div className={`e-bubble e-metric ${className}`} title={title}>{inner}</div>;
+}
+
+// Burbuja con barra de progreso y, si hace falta, contenido debajo.
+function ProgressBubble({ icon, iconKind, title, titleBig, subtitle, action, label, valueLabel, value, max, tone, children, className = "" }) {
+  return (
+    <BubbleCard icon={icon} iconKind={iconKind} title={title} titleBig={titleBig} subtitle={subtitle} action={action} className={className}>
+      <div className="e-prog">
+        {(label != null || valueLabel != null) && <div className="top"><span className="l">{label}</span><span className="v">{valueLabel}</span></div>}
+        <ProgressBar value={value} max={max} tone={tone} big />
+      </div>
+      {children}
+    </BubbleCard>
+  );
+}
+
+// Entrenamiento: el bloque principal de Hoy y de las listas de sesiones.
+function WorkoutBubble({ icon = Dumbbell, iconKind = "", label, title, meta, progress, chips, action, children, accent, className = "" }) {
+  return (
+    <BubbleCard icon={icon} iconKind={iconKind} title={label} action={action} accent={accent} className={`e-workout ${className}`}>
+      <div className="e-stack" style={{ gap: 4 }}>
+        <b style={{ fontSize: 26, fontWeight: 650, letterSpacing: "-.02em", lineHeight: 1.15 }}>{title}</b>
+        {meta && <span className="e-bubble-sub">{meta}</span>}
+      </div>
+      {progress && progress.total > 0 && (
+        <div className="e-prog">
+          <div className="top"><span className="l">{progress.label || "Progreso"}</span><span className="v">{progress.done} / {progress.total}</span></div>
+          <SegmentBar total={progress.total} done={progress.done} />
+        </div>
+      )}
+      {chips}
+      {children}
+    </BubbleCard>
+  );
+}
+
+// Ejercicio dentro de una sesión: número, nombre, estado y series desplegables.
+function ExerciseBubble({ index, name, meta, thumb, state = "", progress, open, onToggle, children, className = "" }) {
+  const head = (
+    <div className="e-ex-head">
+      <span className="e-ex-n">{pad2(index)}</span>
+      {thumb}
+      <span className="e-grow e-stack">
+        <span className="e-ex-name">{name}</span>
+        {meta && <span className="e-ex-meta">{meta}</span>}
+      </span>
+      <span className={`e-ex-state ${state === "done" ? "on" : state}`} aria-hidden="true">{state === "done" ? <Check /> : onToggle ? (open ? <ChevronUp /> : <ChevronDown />) : <Circle />}</span>
+    </div>
+  );
+  return (
+    <section className={`e-bubble e-exercise ${className}`}>
+      {onToggle ? (
+        <button type="button" onClick={onToggle} aria-expanded={!!open} style={{ textAlign: "left", width: "100%" }}>{head}</button>
+      ) : head}
+      {progress && progress.total > 0 && <SegmentBar total={progress.total} done={progress.done} />}
+      {open !== false && children}
+    </section>
+  );
+}
 const Btn = ({ variant = "ghost", size = "", full, icon: I, children, className = "", ...rest }) => (
   <button type="button" className={`e-btn ${variant} ${size} ${full ? "full" : ""} ${className}`} {...rest}>{I && <I />}{children}</button>
 );
 const IconBtn = ({ icon: I, label, small, on, ...rest }) => (
   <button type="button" className={`e-icon-btn ${small ? "sm" : ""} ${on ? "on" : ""}`} aria-label={label} title={label} {...rest}><I /></button>
 );
-const Chip = ({ kind = "", icon: I, children, ...rest }) => <span className={`e-chip ${kind}`} {...rest}>{I && <I />}{children}</span>;
 const Field = ({ label, children, hint }) => (
   <div className="e-field">{label && <label>{label}</label>}{children}{hint && <span className="e-muted">{hint}</span>}</div>
 );
@@ -1729,7 +1964,7 @@ const Ring = ({ value, max, size = 96, stroke = 9, color = "var(--e-acc)", child
 const MacroBar = ({ label, value, max, unit = "g" }) => (
   <div className="e-macro">
     <div className="top"><span className="e-muted">{label}</span><span><b>{fmtN(value)}</b><span className="e-muted"> / {fmtN(max)} {unit}</span></span></div>
-    <div className="e-bar"><i className={value > max ? "over" : ""} style={{ width: `${clamp((value / (max || 1)) * 100, 0, 100)}%` }} /></div>
+    <ProgressBar value={value} max={max || 1} />
   </div>
 );
 const Note = ({ kind = "", icon: I = Info, children }) => <div className={`e-note ${kind}`}><I />{children}</div>;
@@ -2063,11 +2298,9 @@ function RoutinesView() {
         {r.description && <p className="e-muted">{r.description}</p>}
         {!isActive && <Btn variant="soft" icon={Check} onClick={() => { store.setSettings({ activeRoutineId: r.id }); toast("Rutina activada", "ok"); }}>Usar como rutina activa</Btn>}
         {r.days.map((d, i) => (
-          <Card key={i} flush>
-            <div className="e-card-head" style={{ padding: "16px 16px 8px" }}>
-              <h2 className="e-card-title big">{d.name}</h2>
-              <Btn variant={isActive && planned?.dayIndex === i ? "primary" : "soft"} size="sm" icon={Play} onClick={() => start(r, i)}>{isActive && planned?.dayIndex === i ? "Empezar · previsto" : "Empezar"}</Btn>
-            </div>
+          <BubbleCard key={i} flush icon={Dumbbell} title={d.name} titleBig
+            subtitle={`${d.blocks.length} ejercicios · ${sum(d.blocks.map((b) => b.sets))} series`}
+            action={<Btn variant={isActive && planned?.dayIndex === i ? "primary" : "soft"} size="sm" icon={Play} onClick={() => start(r, i)}>{isActive && planned?.dayIndex === i ? "Empezar · previsto" : "Empezar"}</Btn>}>
             <div className="e-list">
               {d.blocks.map((b, j) => {
                 const e = exById[b.exerciseId];
@@ -2079,7 +2312,7 @@ function RoutinesView() {
                 );
               })}
             </div>
-          </Card>
+          </BubbleCard>
         ))}
       </div>
     );
@@ -2087,29 +2320,26 @@ function RoutinesView() {
   return (
     <div className="e-page">
       {active && (
-        <Card accent>
-          <div className="e-row between"><div className="e-stack"><span className="e-label">Sesión en curso</span><b style={{ fontSize: 17 }}>{active.dayName}</b></div><Btn variant="primary" icon={Play} onClick={() => nav.go("entreno", "session")}>Continuar</Btn></div>
-        </Card>
+        <WorkoutBubble icon={Dumbbell} iconKind="ok" accent label="Sesión en curso" title={active.dayName}
+          meta={`${sessionSetCount(active)} series hechas`}
+          action={<Btn variant="primary" icon={Play} onClick={() => nav.go("entreno", "session")}>Continuar</Btn>} />
       )}
       {planned && !active && (
-        <Card title="Próxima sesión">
-          <div className="e-row between">
-            <div className="e-stack"><b style={{ fontSize: 22, fontWeight: 600 }}>{planned.day.name}</b><span className="e-muted">{planned.routine.name} · {planned.day.blocks.length} ejercicios</span></div>
-            <Btn variant="primary" icon={Play} onClick={() => start(planned.routine, planned.dayIndex)}>Empezar</Btn>
-          </div>
-        </Card>
+        <WorkoutBubble icon={Dumbbell} label="Próxima sesión" title={planned.day.name}
+          meta={`${planned.routine.name} · ${planned.day.blocks.length} ejercicios · ${sum(planned.day.blocks.map((b) => b.sets))} series`}
+          action={<Btn variant="primary" icon={Play} onClick={() => start(planned.routine, planned.dayIndex)}>Empezar</Btn>} />
       )}
-      <Card title="Rutinas" flush action={<Btn size="sm" variant="soft" icon={Plus} onClick={() => setEditing({ id: uid(), name: "Nueva rutina", description: "", days: [{ name: "Día 1", blocks: [] }] })}>Nueva</Btn>}>
+      <BubbleCard icon={Library} title="Rutinas" flush action={<Btn size="sm" variant="soft" icon={Plus} onClick={() => setEditing({ id: uid(), name: "Nueva rutina", description: "", days: [{ name: "Día 1", blocks: [] }] })}>Nueva</Btn>}>
         <div className="e-list" style={{ marginTop: 8 }}>
           {data.routines.map((r) => (
             <button key={r.id} className="e-item" onClick={() => setOpen(r)}>
               <span className="e-grow e-stack"><span className="t">{r.name}</span><span className="s">{r.days.map((d) => d.name).join(" · ")}</span></span>
-              {data.settings.activeRoutineId === r.id && <Chip kind="acc">activa</Chip>}
+              {data.settings.activeRoutineId === r.id && <StatusBadge kind="acc">activa</StatusBadge>}
               <ChevronRight style={{ width: 18, color: "var(--e-text2)" }} />
             </button>
           ))}
         </div>
-      </Card>
+      </BubbleCard>
     </div>
   );
 }
@@ -2137,12 +2367,12 @@ function RoutineEditor({ routine, onClose }) {
         <div className="e-row"><IconBtn icon={X} label="Cancelar" onClick={onClose} /><h1>Editar rutina</h1></div>
         <Btn variant="primary" size="sm" icon={Check} onClick={save}>Guardar</Btn>
       </div>
-      <Card>
+      <BubbleCard icon={Pencil} title="Datos de la rutina">
         <Field label="Nombre"><Input id="rt-name" value={r.name} onChange={(e) => setR({ ...r, name: e.target.value })} /></Field>
         <Field label="Descripción"><Input id="rt-desc" value={r.description || ""} onChange={(e) => setR({ ...r, description: e.target.value })} /></Field>
-      </Card>
+      </BubbleCard>
       {r.days.map((d, i) => (
-        <Card key={i}>
+        <BubbleCard key={i}>
           <div className="e-row">
             <Input id={`rt-day-${i}`} value={d.name} onChange={(e) => upDay(i, { name: e.target.value })} style={{ fontWeight: 600 }} />
             <IconBtn icon={Trash2} label="Eliminar día" onClick={() => setR({ ...r, days: r.days.filter((_, j) => j !== i) })} />
@@ -2166,7 +2396,7 @@ function RoutineEditor({ routine, onClose }) {
             </div>
           ))}
           <Btn variant="outline" icon={Plus} onClick={() => setPicker(i)}>Añadir ejercicio</Btn>
-        </Card>
+        </BubbleCard>
       ))}
       <Btn variant="soft" icon={Plus} onClick={() => setR({ ...r, days: [...r.days, { name: `Día ${r.days.length + 1}`, blocks: [] }] })}>Añadir día</Btn>
       <ExercisePicker open={picker != null} onClose={() => setPicker(null)} exclude={picker != null ? r.days[picker].blocks.map((b) => b.exerciseId) : []}
@@ -2190,7 +2420,7 @@ function LoadSheet({ open, onClose, exercise, session, currentKg, onPick, onUnmo
   const pick = (l) => { onPick(l); onClose(); };
   return (
     <Sheet open={open} onClose={onClose} title={`Carga · ${exercise.name}`}>
-      <div className="e-row between wrap"><Chip kind="acc">{mode.unit}</Chip><span className="e-muted">{loads.length} carga{loads.length === 1 ? "" : "s"} montable{loads.length === 1 ? "" : "s"}</span></div>
+      <div className="e-row between wrap"><StatusBadge kind="acc">{mode.unit}</StatusBadge><span className="e-muted">{loads.length} carga{loads.length === 1 ? "" : "s"} montable{loads.length === 1 ? "" : "s"}</span></div>
       {other && (
         <Note kind="warn" icon={AlertTriangle}>
           <span>Hay {fmtKg(other.kg)} kg montados en {otherName} ({other.side.map((s) => `${s.n * (other.groupSize || 2)}×${fmtKg(s.kg)}`).join(", ")}). Esos discos no cuentan aquí.
@@ -2245,7 +2475,7 @@ function RestTimer({ timer, onChange, onDone }) {
   const pct = clamp(left / timer.total, 0, 1);
   if (hidden) {
     return (
-      <button className="e-card" style={{ position: "sticky", top: 8, zIndex: 5, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", boxShadow: "0 8px 24px rgba(0,0,0,.35)" }} onClick={() => setHidden(false)}>
+      <button className="e-bubble" style={{ position: "sticky", top: 8, zIndex: 5, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", boxShadow: "var(--e-shadow-lift)" }} onClick={() => setHidden(false)}>
         <span className="e-row"><Timer style={{ width: 18, color: "var(--e-acc)" }} /><b style={{ fontSize: 20 }}>{fmtSecs(left)}</b><span className="e-muted">descanso</span></span>
         <span className="e-btn xs soft" onClick={(e) => { e.stopPropagation(); onChange(null); }}>Saltar</span>
       </button>
@@ -2288,6 +2518,8 @@ function SessionView() {
   const [picker, setPicker] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [summary, setSummary] = useState(null);
+  // Ejercicio desplegado. null = automático: el primero que queda por cerrar.
+  const [openEx, setOpenEx] = useState(null);
   const [, setTick] = useState(0);
   useEffect(() => { const i = setInterval(() => setTick((t) => t + 1), 1000); return () => clearInterval(i); }, []);
 
@@ -2368,17 +2600,34 @@ function SessionView() {
 
   const loadEx = loadFor ? exById[session.exercises[loadFor.exIndex].exerciseId] : null;
   const m = session.mounted || {};
+  // Ejercicio desplegado: el elegido a mano o, por defecto, el primero abierto.
+  const firstPending = session.exercises.findIndex((e) => !(e.sets.length > 0 && e.sets.every((x) => x.done)));
+  const openIndex = openEx == null ? (firstPending === -1 ? -1 : firstPending) : openEx;
+  const exDone = session.exercises.filter((e) => e.sets.length > 0 && e.sets.every((x) => x.done)).length;
   return (
     <div className="e-page">
       <RestTimer timer={timer} onChange={setTimer} onDone={onTimerDone} />
       <div className="e-header">
-        <div className="e-row"><IconBtn icon={ChevronLeft} label="Volver" onClick={() => nav.go("entreno", session.programId ? "program" : "routines")} /><div><h1>{session.programWeek ? `S${session.programWeek} · ` : ""}{session.dayName}</h1><div className="sub">{session.blockName ? `${session.blockName} · ` : ""}{fmtSecs(elapsed)} · {sessionSetCount(session)} series · {fmtN(sessionTonnage(session, exById))} kg</div></div></div>
+        <div className="e-row">
+          <IconBtn icon={ChevronLeft} label="Volver" onClick={() => nav.go("entreno", session.programId ? "program" : "routines")} />
+          <div>
+            <div className="e-greet">{session.blockName || "Sesión en curso"}</div>
+            <h1>{session.programWeek ? `S${session.programWeek} · ` : ""}{session.dayName}</h1>
+          </div>
+        </div>
         <Btn variant="primary" size="sm" icon={Check} onClick={() => setFinishing(true)}>Terminar</Btn>
       </div>
-      <div className="e-chips">
-        <Chip icon={Layers} kind={m.barbell ? "acc" : ""}>Barra: {m.barbell ? `${fmtKg(m.barbell.kg)} kg` : "libre"}</Chip>
-        <Chip icon={Dumbbell} kind={m.dumbbells ? "acc" : ""}>Mancuernas: {m.dumbbells ? `${fmtKg(m.dumbbells.kg)} kg` : "libres"}</Chip>
-      </div>
+      <BubbleCard icon={Timer} title={fmtSecs(elapsed)} titleBig
+        subtitle={`${sessionSetCount(session)} series · ${fmtN(sessionTonnage(session, exById))} kg`}
+        action={<StatusBadge kind={exDone === session.exercises.length ? "ok" : "acc"}>{exDone} / {session.exercises.length} ejercicios</StatusBadge>}>
+        <SegmentBar total={session.exercises.length} done={exDone} />
+        <div className="e-chips">
+          <StatusBadge icon={Layers} kind={m.barbell ? "acc" : ""}>Barra: {m.barbell ? `${fmtKg(m.barbell.kg)} kg` : "libre"}</StatusBadge>
+          <StatusBadge icon={Dumbbell} kind={m.dumbbells ? "acc" : ""}>Mancuernas: {m.dumbbells ? `${fmtKg(m.dumbbells.kg)} kg` : "libres"}</StatusBadge>
+        </div>
+      </BubbleCard>
+      <SectionHeader title="Ejercicios" sub={`${exDone} de ${session.exercises.length} completados`}
+        action={<ActionButton icon={Plus} onClick={() => setPicker(true)}>Añadir</ActionButton>} />
       {session.exercises.map((ex, i) => {
         const def = exById[ex.exerciseId];
         if (!def) return null;
@@ -2388,49 +2637,66 @@ function SessionView() {
         const loads = loadsFor(def, data.inventory, data.settings, session.mounted);
         const sug = suggestProgression({ exercise: def, block: { repsMax: ex.repsMax }, last, loads });
         if (sug && ex.rirTarget >= 4) sug.text = "Semana de descarga: mantén el peso un 10 % por debajo del habitual y queda lejos del fallo.";
+        const hechas = doneSets(ex).length;
+        const allDone = ex.sets.length > 0 && ex.sets.every((x) => x.done);
+        const open = openIndex === i;
         return (
-          <Card key={i} flush>
-            <div className="e-col" style={{ padding: "14px 16px 0", gap: 6 }}>
-              <div className="e-row between">
-                <span className="e-thumb"><ExerciseFigure exercise={def} size={64} /></span>
-                <div className="e-stack e-grow"><b style={{ fontSize: 17 }}>{def.name}</b><span className="e-muted">{def.muscle} · {mode.unit} · descanso {ex.restSec}s</span></div>
-                <IconBtn small icon={Trash2} label="Quitar ejercicio" onClick={() => update({ exercises: session.exercises.filter((_, j) => j !== i) })} />
-              </div>
-              {ex.rirTarget != null && <div className="e-row wrap" style={{ gap: 6 }}><Chip kind="acc">Objetivo {ex.sets.length} × {ex.repsMin}–{ex.repsMax}</Chip><Chip>RIR {ex.rirTarget}</Chip>{ex.planNote && <span className="e-muted">{ex.planNote}</span>}</div>}
-              {lastSets.length > 0 && <div className="e-muted"><Repeat style={{ width: 13, verticalAlign: -2 }} /> Última ({fmtDateShort(last.date)}): {lastSets.map((s) => `${num(s.kg) > 0 ? fmtKg(s.kg) + "×" : ""}${s.reps}`).join(" · ")}{lastSets.some((s) => s.rir !== "" && s.rir != null) ? ` · RIR ${Math.min(...lastSets.map((s) => num(s.rir, 9)))}` : ""}</div>}
-              {sug && <div className="e-note acc" style={{ padding: "8px 10px" }}><Sparkles /><span>{sug.text}</span></div>}
-            </div>
-            <div style={{ padding: "10px 12px 12px" }}>
+          <ExerciseBubble key={i} index={i + 1} name={def.name}
+            meta={ex.repsMin ? `${ex.sets.length} series · ${ex.repsMin}–${ex.repsMax} reps` : `${ex.sets.length} series · ${mode.unit}`}
+            thumb={<span className="e-thumb"><ExerciseFigure exercise={def} size={60} muted={allDone} /></span>}
+            state={allDone ? "done" : open ? "cur" : ""}
+            progress={{ total: ex.sets.length, done: hechas }}
+            open={open}
+            onToggle={() => setOpenEx(open ? -1 : i)}>
+            <div className="e-col" style={{ gap: 10 }}>
+              {(ex.rirTarget != null || lastSets.length > 0) && (
+                <div className="e-row wrap" style={{ gap: 6 }}>
+                  {ex.rirTarget != null && <StatusBadge kind="acc">Objetivo {ex.sets.length} × {ex.repsMin}–{ex.repsMax}</StatusBadge>}
+                  {ex.rirTarget != null && <StatusBadge>RIR {ex.rirTarget}</StatusBadge>}
+                  {lastSets.length > 0 && <StatusBadge icon={Repeat}>Última {fmtDateShort(last.date)}: {lastSets.map((x) => `${num(x.kg) > 0 ? fmtKg(x.kg) + "×" : ""}${x.reps}`).join(" · ")}</StatusBadge>}
+                </div>
+              )}
+              {ex.planNote && <span className="e-muted">{ex.planNote}</span>}
+              {sug && <Note kind="acc" icon={Sparkles}>{sug.text}</Note>}
               <div className="e-sets">
-                <span className="h">#</span><span className="h">{def.loadMode === "bodyweight" ? "lastre" : "kg"}</span><span className="h">{def.muscle === "core" && def.loadMode === "bodyweight" ? "reps/s" : "reps"}</span><span className="h">RIR</span><span className="h">=</span><span className="h">✓</span>
+                <span className="h">Serie</span>
+                <span className="h">{def.loadMode === "bodyweight" ? "Lastre" : "Peso"}</span>
+                <span className="h">{def.muscle === "core" && def.loadMode === "bodyweight" ? "Reps/s" : "Reps"}</span>
+                <span className="h">RIR</span>
+                <span className="h" aria-label="Repetir serie anterior">=</span>
+                <span className="h" aria-label="Completar">✓</span>
                 {ex.sets.map((s, k) => {
                   const ph = lastSets[k] || lastSets[lastSets.length - 1];
                   return (
                     <div key={k} className={`e-set-row ${s.done ? "done" : ""}`}>
                       <span className="n">{s.pr ? <Trophy /> : k + 1}</span>
-                      <button className={`e-cell ${s.kg == null ? "ph" : ""}`} onClick={() => setLoadFor({ exIndex: i, setIndex: k })} disabled={s.done}>
+                      <button className={`e-cell ${s.kg == null ? "ph" : ""}`} onClick={() => setLoadFor({ exIndex: i, setIndex: k })} disabled={s.done} aria-label={`Carga serie ${k + 1}`}>
                         {s.kg == null ? (def.loadMode === "bodyweight" ? "PC" : ph ? fmtKg(ph.kg) : "kg") : (def.loadMode === "bodyweight" && num(s.kg) === 0 ? "PC" : fmtKg(s.kg))}
                         {def.loadMode === "pair" || def.loadMode === "single" ? <span className="u">/md</span> : null}
                       </button>
                       <input className="e-cell" type="number" inputMode="numeric" placeholder={ph ? String(ph.reps) : "–"} value={s.reps} disabled={s.done} onChange={(e) => updateSet(i, k, { reps: e.target.value })} aria-label={`Repeticiones serie ${k + 1}`} />
-                      <button className={`e-cell ${s.rir === "" ? "ph" : ""}`} disabled={s.done} onClick={() => updateSet(i, k, { rir: s.rir === "" ? 2 : (num(s.rir) + 5) % 6 })} aria-label="RIR">{s.rir === "" ? (ph?.rir ?? "–") : s.rir}</button>
-                      <button className="e-copy" onClick={() => copyPrev(i, k)} disabled={s.done} aria-label="Repetir serie anterior" title="Repetir serie anterior"><Copy /></button>
-                      <button className={`e-check ${s.done ? "on" : ""}`} onClick={() => complete(i, k)} aria-label={s.done ? "Deshacer" : "Completar serie"}><Check /></button>
+                      <button className={`e-cell ${s.rir === "" ? "ph" : ""}`} disabled={s.done} onClick={() => updateSet(i, k, { rir: s.rir === "" ? 2 : (num(s.rir) + 5) % 6 })} aria-label={`RIR serie ${k + 1}`}>{s.rir === "" ? (ph?.rir ?? "–") : s.rir}</button>
+                      <button className="e-copy" onClick={() => copyPrev(i, k)} disabled={s.done} aria-label={`Repetir serie anterior en la serie ${k + 1}`} title="Repetir serie anterior"><Copy /></button>
+                      <button className={`e-check ${s.done ? "on" : ""}`} onClick={() => complete(i, k)} aria-label={s.done ? `Deshacer serie ${k + 1}` : `Completar serie ${k + 1}`}><Check /></button>
                     </div>
                   );
                 })}
               </div>
-              <div className="e-row" style={{ marginTop: 10 }}>
+              <div className="e-row wrap" style={{ gap: 6 }}>
                 <Btn size="sm" variant="outline" icon={Plus} onClick={() => updateEx(i, { sets: [...ex.sets, { kg: ex.sets[ex.sets.length - 1]?.kg ?? null, reps: "", rir: "", done: false, pr: false }] })}>Serie</Btn>
                 {ex.sets.length > 1 && <Btn size="sm" variant="outline" icon={Minus} onClick={() => updateEx(i, { sets: ex.sets.slice(0, -1) })}>Serie</Btn>}
                 <span className="e-spacer" />
-                <div className="e-row" style={{ gap: 4 }}><Timer style={{ width: 16, color: "var(--e-text2)" }} /><input className="e-input" style={{ width: 72, minHeight: 36, padding: "0 10px", textAlign: "center" }} type="number" inputMode="numeric" value={ex.restSec} onChange={(e) => updateEx(i, { restSec: e.target.value })} aria-label="Descanso en segundos" /><span className="e-muted">s</span></div>
+                <div className="e-row" style={{ gap: 4 }}>
+                  <Timer style={{ width: 16, color: "var(--e-text2)" }} />
+                  <input className="e-input" style={{ width: 70, minHeight: 36, padding: "0 10px", textAlign: "center" }} type="number" inputMode="numeric" value={ex.restSec} onChange={(e) => updateEx(i, { restSec: e.target.value })} aria-label="Descanso en segundos" />
+                  <span className="e-muted">s</span>
+                </div>
+                <IconBtn small icon={Trash2} label="Quitar ejercicio" onClick={() => update({ exercises: session.exercises.filter((_, j) => j !== i) })} />
               </div>
             </div>
-          </Card>
+          </ExerciseBubble>
         );
       })}
-      <Btn variant="outline" icon={Plus} onClick={() => setPicker(true)}>Añadir ejercicio</Btn>
       <Btn variant="danger" icon={Trash2} onClick={discard}>Descartar sesión</Btn>
       <ExercisePicker open={picker} onClose={() => setPicker(false)} exclude={session.exercises.map((e) => e.exerciseId)}
         onPick={(e) => update({ exercises: [...session.exercises, { exerciseId: e.id, restSec: e.restSec || data.settings.restDefaultSec, repsMin: 8, repsMax: 12, sets: [{ kg: null, reps: "", rir: "", done: false, pr: false }, { kg: null, reps: "", rir: "", done: false, pr: false }, { kg: null, reps: "", rir: "", done: false, pr: false }] }] })} />
@@ -2473,19 +2739,18 @@ function SessionSummary({ summary, onClose }) {
   return (
     <div className="e-page e-countup">
       <div className="e-header"><div><h1>Sesión cerrada</h1><div className="sub">{session.programWeek ? `Semana ${session.programWeek} · ` : ""}{session.dayName} · {fmtDate(session.date)}</div></div><IconBtn icon={X} label="Cerrar" onClick={onClose} /></div>
-      <Card accent>
-        <span className="e-label">Tonelaje</span>
+      <BubbleCard accent icon={Flame} title="Tonelaje">
         <div className="e-hero"><span className="e-big"><CountUp value={session.tonnage} /></span><span className="e-unit">kg</span></div>
-        <div className="e-row" style={{ gap: 24 }}>
+        <div className="e-row between wrap" style={{ gap: 16 }}>
           <div className="e-stack"><span className="e-label">Series</span><b style={{ fontSize: 22 }}><CountUp value={summary.sets} /></b></div>
           <div className="e-stack"><span className="e-label">Duración</span><b style={{ fontSize: 22 }}>{summary.duration} min</b></div>
           <div className="e-stack"><span className="e-label">Semana</span><b style={{ fontSize: 22 }}>{metrics.weeklySessions} ses · {metrics.adherence} %</b></div>
         </div>
-      </Card>
+      </BubbleCard>
       {prs.length > 0 && (
-        <Card title="Récords personales">
+        <BubbleCard icon={Trophy} iconKind="warn" title="Récords personales">
           {prs.map((p, i) => <div key={i} className="e-row between"><span>{p.name}</span><span className="e-pr"><Trophy />{p.kg > 0 ? `${fmtKg(p.kg)} kg × ${p.reps}` : `${p.reps} reps`}</span></div>)}
-        </Card>
+        </BubbleCard>
       )}
       <Btn variant="primary" full onClick={onClose}>Volver</Btn>
     </div>
@@ -2547,18 +2812,18 @@ function ExerciseDetail({ exercise, onBack }) {
         <div className="e-header-actions"><IconBtn icon={Pencil} label="Editar" onClick={() => setEdit(true)} /><IconBtn icon={Trash2} label="Eliminar" onClick={remove} /></div>
       </div>
       <div className="e-chips">
-        <Chip icon={Dumbbell}>{EQUIPMENT_LABEL[def.loadMode]}</Chip>
-        {def.bench && <Chip>banco</Chip>}{def.unilateral && <Chip>unilateral</Chip>}{def.lower && <Chip>tren inferior</Chip>}
-        <Chip icon={Timer}>{def.restSec} s</Chip>
+        <StatusBadge icon={Dumbbell}>{EQUIPMENT_LABEL[def.loadMode]}</StatusBadge>
+        {def.bench && <StatusBadge>banco</StatusBadge>}{def.unilateral && <StatusBadge>unilateral</StatusBadge>}{def.lower && <StatusBadge>tren inferior</StatusBadge>}
+        <StatusBadge icon={Timer}>{def.restSec} s</StatusBadge>
       </div>
-      <Card>
+      <BubbleCard icon={Activity} title="Ejecución" subtitle="posición inicial y final · músculos implicados">
         <div className="e-row" style={{ justifyContent: "space-around", flexWrap: "wrap", gap: 16 }}>
           <AnimatedFigure exercise={def} size={220} />
           <MuscleMap exercise={def} />
         </div>
-      </Card>
+      </BubbleCard>
       <div className="e-grid2">
-        <Card title="Mejor marca">
+        <BubbleCard icon={Trophy} iconKind="warn" title="Mejor marca">
           {best ? (
             <div className="e-hero"><span className="e-big md">{best.kg > 0 ? fmtKg(best.e1rm) : best.reps}</span><span className="e-unit">{best.kg > 0 ? "kg 1RM est." : "reps"}</span><span className="e-muted" style={{ marginLeft: "auto" }}>{best.kg > 0 ? `${fmtKg(best.kg)} × ${best.reps}` : ""} · {fmtDateShort(best.date)}</span></div>
           ) : <p className="e-muted">Sin registros todavía.</p>}
@@ -2567,21 +2832,21 @@ function ExerciseDetail({ exercise, onBack }) {
               data={hist.map((h) => ({ label: fmtDateShort(h.date), e1rm: h.e1rm }))}
               series={[{ key: "e1rm", name: "1RM estimado", color: "var(--e-acc)", width: 2, dots: 3 }]} />
           )}
-        </Card>
-        <Card title="Técnica"><p style={{ fontSize: 14 }}>{def.notes || "Sin notas."}</p></Card>
+        </BubbleCard>
+        <BubbleCard icon={BookOpen} title="Técnica"><p style={{ fontSize: 14 }}>{def.notes || "Sin notas."}</p></BubbleCard>
       </div>
-      <Card title={`Cargas montables · ${mode.unit}`}>
-        <div className="e-chips">{loads.map((l) => <Chip key={l.kg} title={l.label}>{fmtKg(l.kg)}</Chip>)}</div>
+      <BubbleCard icon={Layers} title={`Cargas montables · ${mode.unit}`}>
+        <div className="e-chips">{loads.map((l) => <StatusBadge key={l.kg} title={l.label}>{fmtKg(l.kg)}</StatusBadge>)}</div>
         <p className="e-muted">Con todos los discos libres. Durante la sesión se descuentan los montados en el otro implemento.</p>
-      </Card>
-      <Card title="Historial" flush>
+      </BubbleCard>
+      <BubbleCard icon={CalendarDays} title="Historial" flush>
         <div className="e-list" style={{ marginTop: 8 }}>
           {recent.map((s) => { const ex = s.exercises.find((e) => e.exerciseId === def.id); return (
             <div key={s.id} className="e-item"><span className="e-grow e-stack"><span className="t">{fmtDate(s.date, true)}</span><span className="s">{s.dayName}</span></span><span className="v" style={{ fontWeight: 500, textAlign: "right", whiteSpace: "normal" }}>{doneSets(ex).map((x, i) => <span key={i}>{x.pr && <Trophy style={{ width: 12, color: "var(--e-warn)", verticalAlign: -1 }} />}{num(x.kg) > 0 ? `${fmtKg(x.kg)}×` : ""}{x.reps}{i < doneSets(ex).length - 1 ? " · " : ""}</span>)}</span></div>
           ); })}
           {!recent.length && <Empty icon={Calendar}>Todavía no has registrado este ejercicio.</Empty>}
         </div>
-      </Card>
+      </BubbleCard>
       <ExerciseForm open={edit} onClose={() => setEdit(false)} exercise={def} />
     </div>
   );
@@ -2605,7 +2870,7 @@ function LibraryView() {
         <button className={`e-chip ${!m ? "on" : ""}`} onClick={() => setM("")}>Todos</button>
         {MUSCLES.map((x) => <button key={x} className={`e-chip ${m === x ? "on" : ""}`} onClick={() => setM(x)}>{x}</button>)}
       </div>
-      <Card flush>
+      <BubbleCard flush>
         <div className="e-list">
           {list.map((e) => { const b = bestFor(data.sessions, e.id); return (
             <button key={e.id} className="e-item" onClick={() => setSel(e)}>
@@ -2617,7 +2882,7 @@ function LibraryView() {
           ); })}
           {!list.length && <Empty icon={Search}>Sin resultados</Empty>}
         </div>
-      </Card>
+      </BubbleCard>
       <p className="e-muted">{data.exercises.length} ejercicios, todos ejecutables con tu material.</p>
       <ExerciseForm open={!!creating} onClose={() => setCreating(null)} exercise={creating} />
     </div>
@@ -2644,7 +2909,7 @@ function CalendarView() {
   const monthCount = [...trained].filter((d) => d.startsWith(ym)).length;
   return (
     <div className="e-page">
-      <Card>
+      <BubbleCard>
         <div className="e-row between">
           <IconBtn icon={ChevronLeft} label="Mes anterior" onClick={() => shift(-1)} />
           <div className="e-stack" style={{ alignItems: "center" }}><b style={{ fontSize: 17, textTransform: "capitalize" }}>{MONTHS_ES[mo - 1]} {y}</b><span className="e-muted">{monthCount} días entrenados</span></div>
@@ -2656,8 +2921,8 @@ function CalendarView() {
             <button key={c} className={`e-cal day ${trained.has(c) ? "on" : ""} ${c === t ? "today" : ""} ${c === sel ? "sel" : ""}`} style={{ display: "flex" }} onClick={() => setSel(c)}>{Number(c.slice(-2))}<span className="m" /></button>
           ) : <span key={`x${i}`} />)}
         </div>
-      </Card>
-      <Card title={fmtDate(sel, true)} flush>
+      </BubbleCard>
+      <BubbleCard icon={Dumbbell} title={fmtDate(sel, true)} titleBig flush>
         <div className="e-list" style={{ marginTop: 8 }}>
           {daySessions.map((s) => (
             <div key={s.id} className="e-item" style={{ alignItems: "flex-start", flexDirection: "column", gap: 6 }}>
@@ -2668,7 +2933,7 @@ function CalendarView() {
           ))}
           {!daySessions.length && <Empty icon={Calendar}>Sin entrenamiento este día.</Empty>}
         </div>
-      </Card>
+      </BubbleCard>
     </div>
   );
 }
@@ -2696,12 +2961,12 @@ function ProgramHero({ pg, compact }) {
   return (
     <div className="e-col" style={{ gap: 12 }}>
       <div className="e-row between wrap">
-        <div className="e-stack">
+        <div className="e-stack e-grow">
           <span className="e-label">{week === 0 ? `Empieza el ${fmtDate(program.startDate)}` : pg.finished ? "Programa completado" : `Semana ${week} de ${program.weeks}`}</span>
           <span className="e-row" style={{ gap: 8 }}><BlockDot color={(plan?.block || program.blocks[0]).color} size={12} /><b style={{ fontSize: compact ? 22 : 28, fontWeight: 600, lineHeight: 1.1 }}>{(plan?.block || program.blocks[0]).name}</b></span>
           {plan && <span className="e-muted">Semana {plan.weekInBlock} de {plan.block.weeks[1] - plan.block.weeks[0] + 1} del bloque · {plan.mod.label} · RIR {plan.mod.rir}{plan.mod.deload ? " · descarga" : ""}</span>}
         </div>
-        <div className="e-stack" style={{ alignItems: "flex-end" }}>
+        <div className="e-stack" style={{ alignItems: "flex-end", textAlign: "right" }}>
           <span className="e-big sm">{status.doneCount}<span className="e-unit">/ {status.total}</span></span>
           <span className="e-muted">sesiones hechas</span>
         </div>
@@ -2735,16 +3000,16 @@ function ProgramView() {
   const t = todayISO();
   return (
     <div className="e-page">
-      <Card className="e-hero-card" accent><ProgramHero pg={pg} /></Card>
+      <BubbleCard accent><ProgramHero pg={pg} /></BubbleCard>
 
       {week === 0 && (
-        <Card>
+        <BubbleCard>
           <div className="e-row between wrap"><div className="e-stack"><b style={{ fontSize: 17 }}>Faltan {pg.daysToStart} días</b><span className="e-muted">Empieza el {fmtDate(program.startDate, true)}. Puedes usar estos días para probar cargas con las rutinas libres.</span></div><Btn variant="soft" icon={Play} onClick={startNow}>Empezar esta semana</Btn></div>
-        </Card>
+        </BubbleCard>
       )}
 
       {next && (
-        <Card title="Siguiente sesión">
+        <BubbleCard icon={Dumbbell} title="Siguiente sesión">
           <div className="e-row between wrap">
             <div className="e-stack">
               <span className="e-row" style={{ gap: 8 }}><BlockDot color={next.block.color} /><b style={{ fontSize: 22 }}>{nextDay.name}</b></span>
@@ -2756,10 +3021,10 @@ function ProgramView() {
               <Btn variant="primary" icon={Play} onClick={() => (active ? start() : start(program, next.week, next.day))}>{active ? "Continuar" : "Empezar"}</Btn>
             </div>
           </div>
-        </Card>
+        </BubbleCard>
       )}
 
-      <Card title="Cronología · 26 semanas">
+      <BubbleCard icon={CalendarDays} title="Cronología · 26 semanas">
         <div className="e-timeline" role="img" aria-label="Estado de las 130 sesiones">
           {Array.from({ length: program.weeks }, (_, i) => <span key={`w${i}`}>{(i + 1) % 5 === 0 || i === 0 ? i + 1 : ""}</span>)}
           {[0, 1, 2, 3, 4].map((d) => Array.from({ length: program.weeks }, (_, i) => {
@@ -2774,12 +3039,17 @@ function ProgramView() {
           <span className="e-row" style={{ gap: 4 }}><i style={{ width: 10, height: 10, borderRadius: 3, background: "var(--e-div)" }} />saltada</span>
           <span className="e-row" style={{ gap: 4 }}><i style={{ width: 10, height: 10, borderRadius: 3, boxShadow: "0 0 0 2px var(--e-acc)" }} />hoy</span>
         </div>
-      </Card>
+      </BubbleCard>
 
       {shownPlan && (
-        <Card flush>
-          <div className="e-card-head" style={{ padding: "16px 16px 8px" }}>
-            <div className="e-row"><IconBtn small icon={ChevronLeft} label="Semana anterior" disabled={shownWeek <= 1} onClick={() => setShowWeek(Math.max(1, shownWeek - 1))} /><div className="e-stack" style={{ alignItems: "center" }}><h2 className="e-card-title big">Semana {shownWeek}{shownWeek === week ? " · esta semana" : ""}</h2><span className="e-muted"><BlockDot color={shownPlan.block.color} size={8} /> {shownPlan.block.name} · {shownPlan.mod.label} · RIR {shownPlan.mod.rir}</span></div><IconBtn small icon={ChevronRight} label="Semana siguiente" disabled={shownWeek >= program.weeks} onClick={() => setShowWeek(Math.min(program.weeks, shownWeek + 1))} /></div>
+        <BubbleCard flush>
+          <div className="e-row between" style={{ padding: "16px 16px 4px" }}>
+            <IconBtn small icon={ChevronLeft} label="Semana anterior" disabled={shownWeek <= 1} onClick={() => setShowWeek(Math.max(1, shownWeek - 1))} />
+            <div className="e-stack" style={{ alignItems: "center", textAlign: "center" }}>
+              <h2 className="e-bubble-title big">Semana {shownWeek}{shownWeek === week ? " · esta semana" : ""}</h2>
+              <span className="e-muted"><BlockDot color={shownPlan.block.color} size={8} /> {shownPlan.block.name} · {shownPlan.mod.label} · RIR {shownPlan.mod.rir}</span>
+            </div>
+            <IconBtn small icon={ChevronRight} label="Semana siguiente" disabled={shownWeek >= program.weeks} onClick={() => setShowWeek(Math.min(program.weeks, shownWeek + 1))} />
           </div>
           <div className="e-list">
             {shownPlan.days.map((d, di) => {
@@ -2790,7 +3060,7 @@ function ProgramView() {
                 <div key={di} className="e-col" style={{ padding: "12px 16px", gap: 8 }}>
                   <div className="e-row between">
                     <div className="e-stack"><b style={{ fontSize: 17 }}>{d.name}</b><span className="e-muted">{d.focus} · {fmtDateShort(it?.date || t)}</span></div>
-                    <div className="e-row"><Chip kind={stKind}>{stLabel}</Chip>{next && it && it.key === next.key && !active && <Btn size="xs" variant="primary" icon={Play} onClick={() => start(program, shownWeek, di)}>Empezar</Btn>}</div>
+                    <div className="e-row"><StatusBadge kind={stKind}>{stLabel}</StatusBadge>{next && it && it.key === next.key && !active && <Btn size="xs" variant="primary" icon={Play} onClick={() => start(program, shownWeek, di)}>Empezar</Btn>}</div>
                   </div>
                   {d.blocks.map((b, i) => { const e = exById[b.exerciseId]; return (
                     <div key={i} className="e-row" style={{ gap: 10 }}>
@@ -2803,10 +3073,10 @@ function ProgramView() {
               );
             })}
           </div>
-        </Card>
+        </BubbleCard>
       )}
 
-      <Card title="Bloques">
+      <BubbleCard icon={Layers} title="Bloques">
         {program.blocks.map((b) => (
           <div key={b.id} className="e-col" style={{ gap: 4, padding: "10px 12px", borderRadius: 12, background: plan?.block.id === b.id ? `color-mix(in srgb, ${b.color} 14%, transparent)` : "var(--e-card2)" }}>
             <div className="e-row between"><span className="e-row" style={{ gap: 8 }}><BlockDot color={b.color} /><b>{b.name}</b></span><span className="e-muted">semanas {b.weeks[0]}–{b.weeks[1]}</span></div>
@@ -2814,18 +3084,18 @@ function ProgramView() {
             <span className="e-muted">{b.params}</span>
           </div>
         ))}
-      </Card>
+      </BubbleCard>
 
-      <Card title="Alimentación por fases">
+      <BubbleCard icon={Utensils} title="Alimentación por fases">
         <table className="e-table"><thead><tr><th>Fase</th><th>Semanas</th><th className="r">kcal</th><th className="r">P / C / G</th></tr></thead><tbody>
           {program.nutrition.map((n, i) => { const cur = plan?.nutrition === n; return <tr key={i} style={cur ? { color: "var(--e-acc)", fontWeight: 600 } : undefined}><td>{n.label}{cur ? " · ahora" : ""}</td><td>{n.weeks[0]}–{n.weeks[1]}</td><td className="r">{fmtN(n.kcal)}</td><td className="r">{n.protein} / {n.carbs} / {n.fat}</td></tr>; })}
         </tbody></table>
         <p className="e-muted">Objetivo final {program.goals.targetKg} kg. Hito realista a las 26 semanas: {program.goals.milestoneKg} kg (unos 0,8 kg por semana en déficit). Los 80 kg son un recorrido de unos 12 meses; el segundo ciclo empieza donde acabe este.</p>
-      </Card>
+      </BubbleCard>
 
-      <Card title="Reglas del programa">
+      <BubbleCard icon={Info} title="Reglas del programa">
         {program.rules.map((r, i) => <div key={i} className="e-note"><Info /><span>{r}</span></div>)}
-      </Card>
+      </BubbleCard>
     </div>
   );
 }
@@ -2839,7 +3109,7 @@ function TrainScreen() {
   if (view === "session") return <SessionView />;
   return (
     <>
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "12px 16px 0" }}><Segmented options={tabs} value={view} onChange={(v) => nav.go("entreno", v)} /></div>
+      <div className="e-tabsbar"><Segmented options={tabs} value={view} onChange={(v) => nav.go("entreno", v)} /></div>
       {view === "program" && <ProgramView />}
       {view === "routines" && <RoutinesView />}
       {view === "library" && <LibraryView />}
@@ -2851,7 +3121,7 @@ function TrainScreen() {
 /* =============================================================================
  * MÓDULO DE ALIMENTACIÓN
  * ========================================================================== */
-const MEALS = [["desayuno", "Desayuno"], ["comida", "Comida"], ["cena", "Cena"], ["snacks", "Snacks"]];
+const MEALS = [["desayuno", "Desayuno", Croissant], ["comida", "Comida", Salad], ["cena", "Cena", Soup], ["snacks", "Snacks", Apple]];
 const ZERO = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
 const addM = (a, b, f = 1) => ({ kcal: a.kcal + b.kcal * f, protein: a.protein + b.protein * f, carbs: a.carbs + b.carbs * f, fat: a.fat + b.fat * f });
 const foodMacros = (food, qty) => { const f = food.per === "100g" ? qty / 100 : qty; return { kcal: food.kcal * f, protein: food.protein * f, carbs: food.carbs * f, fat: food.fat * f }; };
@@ -3006,23 +3276,21 @@ function DiaryView() {
         <button className="e-stack" style={{ alignItems: "center" }} onClick={() => setDate(todayISO())}><b style={{ fontSize: 17 }}>{date === todayISO() ? "Hoy" : fmtDate(date)}</b><span className="e-muted">{date === todayISO() ? fmtDate(date) : "tocar para volver a hoy"}</span></button>
         <IconBtn icon={ChevronRight} label="Día siguiente" onClick={() => setDate(addDays(date, 1))} />
       </div>
-      <Card>
+      <BubbleCard icon={Flame} title="Balance del día" subtitle={`${fmtN(totals.total.kcal)} de ${fmtN(g.kcal)} kcal${g.phase ? ` · ${g.phase}` : ""}`}>
         <div className="e-rings">
           <Ring value={totals.total.kcal} max={g.kcal} size={112} stroke={10}><b>{fmtN(Math.abs(left))}</b><span>{left >= 0 ? "restantes" : "de más"}</span></Ring>
           <div className="e-grow e-col" style={{ gap: 10 }}>
-            <div className="e-stack"><span className="e-label">Consumidas{g.phase ? ` · ${g.phase}` : ""}</span><b style={{ fontSize: 17 }}>{fmtN(totals.total.kcal)} <span className="e-muted" style={{ fontWeight: 400 }}>/ {fmtN(g.kcal)} kcal</span></b></div>
             <MacroBar label="Proteína" value={totals.total.protein} max={g.protein} />
             <MacroBar label="Carbohidratos" value={totals.total.carbs} max={g.carbs} />
             <MacroBar label="Grasa" value={totals.total.fat} max={g.fat} />
           </div>
         </div>
-      </Card>
-      {MEALS.map(([key, label]) => (
-        <Card key={key} flush>
-          <div className="e-card-head" style={{ padding: "14px 16px 6px" }}>
-            <div className="e-stack"><h2 className="e-card-title big">{label}</h2><span className="e-muted">{fmtN(totals.byMeal[key].kcal)} kcal · P {fmtN(totals.byMeal[key].protein)} · C {fmtN(totals.byMeal[key].carbs)} · G {fmtN(totals.byMeal[key].fat)}</span></div>
-            <Btn size="sm" variant="soft" icon={Plus} onClick={() => setAdding(key)}>Añadir</Btn>
-          </div>
+      </BubbleCard>
+      <SectionHeader title="Comidas" sub={date === todayISO() ? "lo que llevas hoy" : fmtDate(date)} />
+      {MEALS.map(([key, label, MealIcon]) => (
+        <BubbleCard key={key} flush icon={MealIcon} title={label} titleBig
+          subtitle={`${fmtN(totals.byMeal[key].kcal)} kcal · P ${fmtN(totals.byMeal[key].protein)} · C ${fmtN(totals.byMeal[key].carbs)} · G ${fmtN(totals.byMeal[key].fat)}`}
+          action={<ActionButton icon={Plus} onClick={() => setAdding(key)}>Añadir</ActionButton>}>
           <div className="e-list">
             {(rec.meals[key] || []).map((e, i) => { const info = entryInfo(e, foodsById, recipesById); return (
               <button key={i} className="e-item" style={{ minHeight: 48 }} onClick={() => setEditing({ meal: key, index: i })}>
@@ -3031,17 +3299,17 @@ function DiaryView() {
               </button>
             ); })}
           </div>
-        </Card>
+        </BubbleCard>
       ))}
-      <Card>
+      <BubbleCard icon={Droplets} title="Agua" subtitle={`objetivo ${fmtN(g.waterMl / 1000, 1)} l`}>
         <div className="e-row between">
           <div className="e-rings">
             <Ring value={rec.waterMl} max={g.waterMl} size={72} stroke={7}><Droplets style={{ width: 20, color: "var(--e-acc)" }} /></Ring>
-            <div className="e-stack"><span className="e-label">Agua</span><div className="e-hero"><span className="e-big sm">{fmtN(rec.waterMl / 1000, 2)}</span><span className="e-unit">/ {fmtN(g.waterMl / 1000, 1)} l</span></div></div>
+            <div className="e-hero"><span className="e-big sm">{fmtN(rec.waterMl / 1000, 2)}</span><span className="e-unit">/ {fmtN(g.waterMl / 1000, 1)} l</span></div>
           </div>
           <div className="e-row"><Btn size="sm" variant="outline" icon={Minus} onClick={() => save({ waterMl: Math.max(0, rec.waterMl - 250) })} aria-label="Quitar 250 ml" /><Btn size="sm" variant="soft" onClick={() => save({ waterMl: rec.waterMl + 250 })}>+250</Btn><Btn size="sm" variant="soft" onClick={() => save({ waterMl: rec.waterMl + 500 })}>+500</Btn></div>
         </div>
-      </Card>
+      </BubbleCard>
       <Btn variant="outline" icon={ShoppingCart} onClick={shopping}>Enviar ingredientes a la lista de la compra</Btn>
       <AddFoodSheet open={!!adding} onClose={() => setAdding(null)} onAdd={(e) => addEntry(adding, e)} />
       <Sheet open={!!editing} onClose={() => setEditing(null)} title={ed ? entryInfo(ed, foodsById, recipesById).name : ""}>
@@ -3067,7 +3335,7 @@ function FoodsView() {
         <Input id="foods-q" className="e-grow" placeholder="Buscar alimento" value={q} onChange={(e) => setQ(e.target.value)} />
         <Btn variant="soft" icon={Plus} onClick={() => setEditing({ id: uid(), isNew: true, name: "", per: "100g", unitLabel: "", kcal: "", protein: "", carbs: "", fat: "" })}>Nuevo</Btn>
       </div>
-      <Card flush>
+      <BubbleCard flush>
         <div className="e-list">
           {list.map((f) => (
             <button key={f.id} className="e-item" onClick={() => setEditing(f)}>
@@ -3077,7 +3345,7 @@ function FoodsView() {
           ))}
           {!list.length && <Empty icon={Search}>Sin resultados</Empty>}
         </div>
-      </Card>
+      </BubbleCard>
       <FoodForm open={!!editing} onClose={() => setEditing(null)} food={editing} />
       {editing && !editing.isNew && <div style={{ display: "none" }} />}
     </div>
@@ -3101,7 +3369,7 @@ function RecipesView() {
   return (
     <div className="e-page">
       <div className="e-row between"><span className="e-muted">{data.recipes.length} recetas</span><Btn variant="soft" icon={Plus} onClick={() => setR({ id: uid(), isNew: true, name: "", servings: 1, items: [] })}>Nueva</Btn></div>
-      <Card flush>
+      <BubbleCard flush>
         <div className="e-list">
           {data.recipes.map((x) => { const t = recipeTotals(x, foodsById); return (
             <button key={x.id} className="e-item" onClick={() => setR(JSON.parse(JSON.stringify(x)))}>
@@ -3111,7 +3379,7 @@ function RecipesView() {
           ); })}
           {!data.recipes.length && <Empty icon={BookOpen}>Todavía no hay recetas.</Empty>}
         </div>
-      </Card>
+      </BubbleCard>
       <Sheet open={!!r} onClose={() => setR(null)} title={r?.isNew ? "Nueva receta" : "Editar receta"} footer={r && <div className="e-row">{!r.isNew && <Btn variant="danger" icon={Trash2} onClick={remove} />}<Btn variant="primary" className="e-grow" icon={Check} onClick={save}>Guardar</Btn></div>}>
         {r && (<>
           <div className="e-fields" style={{ gridTemplateColumns: "2fr 1fr" }}>
@@ -3151,7 +3419,7 @@ function FoodScreen() {
   const tabs = [{ value: "diary", label: "Diario" }, { value: "foods", label: "Alimentos" }, { value: "recipes", label: "Recetas" }];
   return (
     <>
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "12px 16px 0" }}><Segmented options={tabs} value={view} onChange={(v) => nav.go("comida", v)} /></div>
+      <div className="e-tabsbar"><Segmented options={tabs} value={view} onChange={(v) => nav.go("comida", v)} /></div>
       {view === "diary" && <DiaryView />}
       {view === "foods" && <FoodsView />}
       {view === "recipes" && <RecipesView />}
@@ -3162,15 +3430,24 @@ function FoodScreen() {
 /* =============================================================================
  * PANTALLA PRINCIPAL · HOY
  * ========================================================================== */
-function WeekDots({ sessions, daysPerWeek }) {
+// Días entrenados de la semana en curso: lo usan el punteado y la adherencia.
+function weekTrainedDays(sessions) {
   const t = todayISO(), ws = weekStart(t);
   const days = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
   const trained = new Set(sessions.filter((s) => s.finishedAt).map((s) => s.date));
-  const n = days.filter((d) => trained.has(d)).length;
+  return { today: t, days, trained, n: days.filter((d) => trained.has(d)).length };
+}
+
+function WeekDots({ sessions }) {
+  const { today, days, trained } = weekTrainedDays(sessions);
   return (
-    <div className="e-col">
-      <div className="e-week">{days.map((d, i) => <div key={d} className="d"><span>{DAYS_ES[i]}</span><span className={`dot ${trained.has(d) ? "on" : ""} ${d === t ? "today" : ""}`}><Check /></span></div>)}</div>
-      <div className="e-row between"><span className="e-muted">Adherencia semanal</span><b>{n} / {daysPerWeek} · {Math.round((n / daysPerWeek) * 100)} %</b></div>
+    <div className="e-week">
+      {days.map((d, i) => (
+        <div key={d} className="d">
+          <span>{DAYS_ES[i]}</span>
+          <span className={`dot ${trained.has(d) ? "on" : ""} ${d === today ? "today" : ""}`}><Check /></span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -3184,6 +3461,30 @@ function WeightTrend({ series }) {
   const cls = diff < -0.05 ? "down" : diff > 0.05 ? "up" : "flat";
   const I = cls === "down" ? ArrowDown : cls === "up" ? ArrowUp : Minus;
   return <span className={`e-trend ${cls}`}><I />{diff > 0 ? "+" : ""}{fmtKg(diff)} kg / 7 d</span>;
+}
+
+// Lista «Próximo»: los ejercicios de la sesión en curso o de la que toca.
+function NextExercises({ items, title, sub }) {
+  if (!items.length) return null;
+  const shown = items.slice(0, 6);
+  return (
+    <BubbleCard icon={ListTodo} title={title} subtitle={sub}>
+      <div>
+        {shown.map((x, i) => (
+          <div key={i} className={`e-next-item ${x.done ? "done" : ""}`}>
+            <span className="nm e-stack">
+              <span className="e-ellip" style={{ fontWeight: 500 }}>{x.name}</span>
+              {x.meta && <span className="e-muted">{x.meta}</span>}
+            </span>
+            <span className={`e-ex-state ${x.done ? "on" : x.current ? "cur" : ""}`} role="img" aria-label={x.done ? "hecho" : "pendiente"}>
+              {x.done ? <Check /> : <Circle />}
+            </span>
+          </div>
+        ))}
+        {items.length > shown.length && <div className="e-next-item"><span className="nm e-muted">y {items.length - shown.length} más</span></div>}
+      </div>
+    </BubbleCard>
+  );
 }
 
 function TodayScreen() {
@@ -3215,85 +3516,137 @@ function TodayScreen() {
     nav.go("entreno", "session");
   };
   const spark = series.slice(-30).map((p) => ({ d: p.date, kg: p.kg, ma: p.ma }));
+  const stepGoal = pg?.program.goals.stepsPerDay || 10000;
+  const week = weekTrainedDays(data.sessions);
+  const daysPerWeek = data.settings.profile.daysPerWeek || 5;
+
+  // Ejercicios de la sesión en curso o de la siguiente, con su estado real.
+  const exLabel = (b) => `${b.sets} × ${b.repsMin === b.repsMax ? b.repsMin : `${b.repsMin}–${b.repsMax}`}`;
+  let nextItems = [], nextTitle = "Próximo", nextSub = "";
+  if (active) {
+    const firstPending = active.exercises.findIndex((e) => !e.sets.every((x) => x.done));
+    nextItems = active.exercises.map((e, i) => ({
+      name: exById[e.exerciseId]?.name || e.exerciseId,
+      meta: `${doneSets(e).length} / ${e.sets.length} series`,
+      done: e.sets.length > 0 && e.sets.every((x) => x.done),
+      current: i === firstPending,
+    }));
+    nextSub = "Sesión en curso";
+  } else if (pg?.nextDay) {
+    nextItems = pg.nextDay.blocks.map((b) => ({ name: exById[b.exerciseId]?.name || b.exerciseId, meta: exLabel(b), done: false }));
+    nextSub = pg.nextDay.name;
+  } else if (planned) {
+    nextItems = planned.day.blocks.map((b) => ({ name: exById[b.exerciseId]?.name || b.exerciseId, meta: exLabel(b), done: false }));
+    nextSub = planned.day.name;
+  }
+
+  // Bloque principal: mismo árbol de decisión de siempre, en una sola burbuja.
+  const activeProgress = active ? { done: active.exercises.filter((e) => e.sets.length && e.sets.every((x) => x.done)).length, total: active.exercises.length, label: "Ejercicios" } : null;
+  let hero;
+  if (active) {
+    hero = <WorkoutBubble icon={Dumbbell} iconKind="ok" label="Sesión en curso"
+      title={`${active.programWeek ? `S${active.programWeek} · ` : ""}${active.dayName}`}
+      meta={`${sessionSetCount(active)} series hechas · ${fmtN(sessionTonnage(active, exById))} kg`}
+      progress={activeProgress}
+      action={<Btn variant="primary" icon={Play} onClick={() => nav.go("entreno", "session")}>Continuar</Btn>} />;
+  } else if (pg && pg.week === 0) {
+    hero = <WorkoutBubble icon={CalendarDays} label="Programa"
+      title={`Empieza en ${pg.daysToStart} día${pg.daysToStart === 1 ? "" : "s"}`}
+      meta={`${fmtDate(pg.program.startDate, true)} · ${pg.program.blocks[0].name}`}
+      action={<ActionButton icon={CalendarDays} onClick={() => nav.go("entreno", "program")}>Ver programa</ActionButton>} />;
+  } else if (pg && pg.next && !(trainedToday.length && !pg.status.behind)) {
+    hero = <WorkoutBubble icon={Dumbbell} label="Entrenamiento de hoy"
+      title={pg.nextDay.name}
+      meta={`${pg.nextDay.blocks.length} ejercicios · ${sum(pg.nextDay.blocks.map((b) => b.sets))} series · RIR ${pg.nextPlan.mod.rir} · ~${pg.program.goals.sessionMinutes} min`}
+      action={<Btn variant="primary" icon={Play} onClick={() => startProgram(pg.program, pg.next.week, pg.next.day)}>Empezar</Btn>}
+      chips={
+        <div className="e-row wrap" style={{ gap: 6 }}>
+          <StatusBadge><BlockDot color={pg.next.block.color} size={8} />Semana {pg.next.week} de {pg.program.weeks} · {pg.next.block.name}</StatusBadge>
+          {pg.status.behind > 0 ? <StatusBadge kind="warn" icon={AlertTriangle}>{pg.status.behind} sesión{pg.status.behind > 1 ? "es" : ""} de retraso</StatusBadge>
+            : weekend ? <StatusBadge icon={CalendarDays}>Fin de semana: descanso o adelantar</StatusBadge>
+              : <StatusBadge kind="ok" icon={Check}>Al día con el programa</StatusBadge>}
+          {pg.nextPlan.mod.deload && <StatusBadge kind="acc">Semana de descarga</StatusBadge>}
+          <button className="e-chip" onClick={() => nav.go("entreno", "program")}>Ver programa <ChevronRight /></button>
+        </div>
+      } />;
+  } else if (trainedToday.length) {
+    hero = <WorkoutBubble icon={CircleCheck} iconKind="ok" label="Entrenamiento de hoy"
+      title={trainedToday.map((s) => s.dayName).join(" + ")}
+      meta={`${fmtN(sum(trainedToday.map((s) => sessionTonnage(s, exById))))} kg · ${sum(trainedToday.map(sessionSetCount))} series`}
+      action={<StatusBadge kind="ok" icon={Check}>Hecho</StatusBadge>} />;
+  } else if (planned) {
+    hero = <WorkoutBubble icon={Dumbbell} label="Entrenamiento previsto"
+      title={planned.day.name}
+      meta={`${planned.routine.name} · ${planned.day.blocks.length} ejercicios · ${sum(planned.day.blocks.map((b) => b.sets))} series`}
+      action={<Btn variant="primary" icon={Play} onClick={start}>Empezar</Btn>} />;
+  } else {
+    hero = <BubbleCard icon={Dumbbell} title="Entrenamiento"><Empty icon={Dumbbell}>Crea una rutina en Entreno para ver aquí la sesión prevista.</Empty></BubbleCard>;
+  }
+
   return (
-    <div className="e-page">
+    <div className="e-page wide">
       <div className="e-header">
-        <div><h1>Hoy</h1><div className="sub" style={{ textTransform: "capitalize" }}>{fmtDate(t, true)}</div></div>
-        <div className="e-row" style={{ gap: 6 }}>
-          <Chip icon={integration.active ? Wifi : WifiOff} kind={integration.active ? "ok" : ""}>{integration.active ? "HA" : "local"}</Chip>
+        <div>
+          <div className="e-greet">{saludo()}</div>
+          <h1>¿Qué toca hoy?</h1>
+          <div className="sub" style={{ textTransform: "capitalize" }}>{fmtDate(t, true)}</div>
+        </div>
+        <div className="e-row" style={{ gap: 4 }}>
+          <StatusBadge icon={integration.active ? Wifi : WifiOff} kind={integration.active ? "ok" : ""}>{integration.active ? "HA" : "local"}</StatusBadge>
           <IconBtn icon={Settings} label="Ajustes" onClick={() => nav.go("ajustes")} />
         </div>
       </div>
-      <Card accent={!!(active || (planned && !trainedToday.length))} className={pg ? "e-hero-card" : ""}>
-        {active ? (
-          <div className="e-row between"><div className="e-stack"><span className="e-label">Sesión en curso</span><b style={{ fontSize: 22 }}>{active.programWeek ? `S${active.programWeek} · ` : ""}{active.dayName}</b><span className="e-muted">{sessionSetCount(active)} series hechas</span></div><Btn variant="primary" icon={Play} onClick={() => nav.go("entreno", "session")}>Continuar</Btn></div>
-        ) : pg && pg.week === 0 ? (
-          <div className="e-row between wrap"><div className="e-stack"><span className="e-label">Programa de 26 semanas</span><b style={{ fontSize: 22 }}>Empieza en {pg.daysToStart} día{pg.daysToStart === 1 ? "" : "s"}</b><span className="e-muted">{fmtDate(pg.program.startDate, true)} · {pg.program.blocks[0].name}</span></div><Btn variant="soft" icon={CalendarDays} onClick={() => nav.go("entreno", "program")}>Ver programa</Btn></div>
-        ) : pg && pg.next && !(trainedToday.length && !pg.status.behind) ? (
-          <div className="e-col">
-            <div className="e-row between wrap">
-              <div className="e-stack">
-                <span className="e-label e-row" style={{ gap: 6 }}><BlockDot color={pg.next.block.color} size={8} />Semana {pg.next.week} de {pg.program.weeks} · {pg.next.block.name}</span>
-                <b style={{ fontSize: 26, lineHeight: 1.1 }}>{pg.nextDay.name}</b>
-                <span className="e-muted">{pg.nextDay.blocks.length} ejercicios · {sum(pg.nextDay.blocks.map((b) => b.sets))} series · RIR {pg.nextPlan.mod.rir} · ~{pg.program.goals.sessionMinutes} min</span>
+
+      <div className="e-grid">
+        {hero}
+
+        <MetricBubble className="e-c3" icon={Scale} label="Peso" onClick={() => nav.go("progreso")}
+          value={last ? fmtKg(last.kg) : "–"} unit={last ? "kg" : ""}
+          title={last?.source === "ha" ? "Lectura de la báscula de Home Assistant" : last ? "Registro manual" : "Sin registros"}
+          foot={last
+            ? <><WeightTrend series={series} />{spark.length > 1 && <Sparkline data={spark} width={70} height={22} series={[{ key: "ma", color: "var(--e-acc)", width: 2 }]} />}</>
+            : <span className="e-muted">tocar para registrar</span>} />
+
+        <MetricBubble className="e-c3" icon={Footprints} label="Pasos"
+          value={Number.isFinite(steps) ? fmtN(steps) : "–"}
+          title={Number.isFinite(steps) ? `Objetivo ${fmtN(stepGoal)} pasos` : "Sin sensor de pasos configurado"}
+          foot={Number.isFinite(steps)
+            ? <><span className="e-muted">{Math.round((steps / stepGoal) * 100)} %</span><ProgressBar value={steps} max={stepGoal} tone={steps >= stepGoal ? "var(--e-ok)" : undefined} /></>
+            : <span className="e-muted">objetivo {fmtN(stepGoal)}</span>} />
+
+        <ProgressBubble className="e-c6" icon={Target} title="Semana"
+          label="Adherencia" valueLabel={`${week.n} / ${daysPerWeek} · ${Math.round((week.n / daysPerWeek) * 100)} %`}
+          value={week.n} max={daysPerWeek} tone={week.n >= daysPerWeek ? "var(--e-ok)" : undefined}>
+          <WeekDots sessions={data.sessions} />
+        </ProgressBubble>
+
+        {nextItems.length > 0 && <div className="e-c6"><NextExercises items={nextItems} title={nextTitle} sub={nextSub} /></div>}
+
+        <div className="e-c6">
+          <BubbleCard icon={Flame} title="Alimentación" subtitle={g.phase || `${fmtN(g.kcal)} kcal de objetivo`}
+            action={<ActionButton icon={ChevronRight} label="Abrir diario" onClick={() => nav.go("comida", "diary")} />}>
+            <div className="e-rings">
+              <Ring value={totals.kcal} max={g.kcal} size={96} stroke={9}>
+                <b>{fmtN(Math.abs(g.kcal - totals.kcal))}</b><span>{g.kcal - totals.kcal >= 0 ? "kcal restan" : "kcal de más"}</span>
+              </Ring>
+              <div className="e-grow e-col" style={{ gap: 8 }}>
+                <MacroBar label="Proteína" value={totals.protein} max={g.protein} />
+                <MacroBar label="Carbohidratos" value={totals.carbs} max={g.carbs} />
+                <MacroBar label="Grasa" value={totals.fat} max={g.fat} />
               </div>
-              <Btn variant="primary" icon={Play} onClick={() => startProgram(pg.program, pg.next.week, pg.next.day)}>Empezar</Btn>
             </div>
-            <div className="e-row wrap" style={{ gap: 6 }}>
-              {pg.status.behind > 0 ? <Chip kind="warn" icon={AlertTriangle}>{pg.status.behind} sesión{pg.status.behind > 1 ? "es" : ""} de retraso</Chip> : weekend ? <Chip icon={CalendarDays}>Fin de semana: descanso o adelantar</Chip> : <Chip kind="ok" icon={Check}>Al día con el programa</Chip>}
-              {pg.nextPlan.mod.deload && <Chip kind="acc">Semana de descarga</Chip>}
-              <button className="e-chip" onClick={() => nav.go("entreno", "program")}>Ver programa <ChevronRight /></button>
+            <div className="e-row between">
+              <span className="e-row"><Droplets style={{ width: 16, color: "var(--e-acc)" }} /><b>{fmtN(diary.waterMl / 1000, 2)} l</b><span className="e-muted">de {fmtN(g.waterMl / 1000, 1)} l</span></span>
+              <div className="e-row" style={{ gap: 6 }}>
+                <Btn size="xs" variant="soft" onClick={() => saveDiary({ waterMl: diary.waterMl + 250 })}>+250 ml</Btn>
+                <Btn size="xs" variant="soft" onClick={() => saveDiary({ waterMl: diary.waterMl + 500 })}>+500 ml</Btn>
+              </div>
             </div>
-          </div>
-        ) : trainedToday.length ? (
-          <div className="e-row between"><div className="e-stack"><span className="e-label">Entrenamiento de hoy</span><b style={{ fontSize: 22 }}>{trainedToday.map((s) => s.dayName).join(" + ")}</b><span className="e-muted">{fmtN(sum(trainedToday.map((s) => sessionTonnage(s, exById))))} kg · {sum(trainedToday.map(sessionSetCount))} series · hecho</span></div><span className="e-chip ok" style={{ height: 34 }}><Check /> Hecho</span></div>
-        ) : planned ? (
-          <div className="e-row between"><div className="e-stack"><span className="e-label">Entrenamiento previsto</span><b style={{ fontSize: 22 }}>{planned.day.name}</b><span className="e-muted">{planned.routine.name} · {planned.day.blocks.length} ejercicios · {sum(planned.day.blocks.map((b) => b.sets))} series</span></div><Btn variant="primary" icon={Play} onClick={start}>Empezar</Btn></div>
-        ) : <Empty icon={Dumbbell}>Crea una rutina en Entreno para ver aquí la sesión prevista.</Empty>}
-      </Card>
-      <div className="e-grid2">
-        <Card title="Semana">
-          <WeekDots sessions={data.sessions} daysPerWeek={data.settings.profile.daysPerWeek || 5} />
-          <div className="e-row between">
-            <span className="e-muted">Pasos de hoy</span>
-            {Number.isFinite(steps) ? <b>{fmtN(steps)} <span className="e-muted" style={{ fontWeight: 400 }}>/ {fmtN(pg?.program.goals.stepsPerDay || 10000)}</span></b> : <span className="e-muted">objetivo {fmtN(pg?.program.goals.stepsPerDay || 10000)}</span>}
-          </div>
-          {Number.isFinite(steps) && <div className="e-bar"><i style={{ width: `${clamp((steps / (pg?.program.goals.stepsPerDay || 10000)) * 100, 0, 100)}%`, background: steps >= (pg?.program.goals.stepsPerDay || 10000) ? "var(--e-ok)" : undefined }} /></div>}
-        </Card>
-        <Card title="Peso corporal" action={<span className="e-muted">{last?.source === "ha" ? "báscula HA" : last ? "manual" : ""}</span>}>
-          <div className="e-row between">
-            <div className="e-stack">
-              {last ? (<>
-                <div className="e-hero"><span className="e-big md">{fmtKg(last.kg)}</span><span className="e-unit">kg</span></div>
-                <WeightTrend series={series} />
-              </>) : (
-                <div className="e-stack">
-                  <span style={{ fontSize: 15 }}>Sin registros de peso</span>
-                  <button className="e-btn xs soft" style={{ alignSelf: "flex-start" }} onClick={() => nav.go("progreso")}>Registrar peso</button>
-                </div>
-              )}
-            </div>
-            {spark.length > 1 && (
-              <Sparkline data={spark} series={[{ key: "kg", color: "var(--e-text2)", width: 1, opacity: 0.6 }, { key: "ma", color: "var(--e-acc)", width: 2 }]} />
-            )}
-          </div>
-          {scale.status === "error" && <Note kind="err" icon={AlertTriangle}>No se pudo leer {scale.entity}. Se usan los registros manuales.</Note>}
-        </Card>
+          </BubbleCard>
+        </div>
+
+        {scale.status === "error" && <Note kind="err" icon={AlertTriangle}>No se pudo leer {scale.entity}. Se usan los registros manuales.</Note>}
       </div>
-      <Card title={g.phase ? `Alimentación · ${g.phase}` : "Alimentación"} action={<Btn size="xs" variant="soft" onClick={() => nav.go("comida", "diary")}>Diario</Btn>}>
-        <div className="e-rings">
-          <Ring value={totals.kcal} max={g.kcal} size={96} stroke={9}><b>{fmtN(Math.abs(g.kcal - totals.kcal))}</b><span>{g.kcal - totals.kcal >= 0 ? "kcal restan" : "kcal de más"}</span></Ring>
-          <div className="e-grow e-col" style={{ gap: 8 }}>
-            <MacroBar label="Proteína restante" value={totals.protein} max={g.protein} />
-            <MacroBar label="Carbohidratos" value={totals.carbs} max={g.carbs} />
-            <MacroBar label="Grasa" value={totals.fat} max={g.fat} />
-          </div>
-        </div>
-        <div className="e-row between">
-          <span className="e-row"><Droplets style={{ width: 16, color: "var(--e-acc)" }} /><b>{fmtN(diary.waterMl / 1000, 2)} l</b><span className="e-muted">de {fmtN(g.waterMl / 1000, 1)} l</span></span>
-          <div className="e-row"><Btn size="xs" variant="soft" onClick={() => saveDiary({ waterMl: diary.waterMl + 250 })}>+250 ml</Btn><Btn size="xs" variant="soft" onClick={() => saveDiary({ waterMl: diary.waterMl + 500 })}>+500 ml</Btn></div>
-        </div>
-      </Card>
     </div>
   );
 }
@@ -3363,7 +3716,7 @@ function SettingsScreen() {
     <div className="e-page">
       <div className="e-header"><div className="e-row"><IconBtn icon={ChevronLeft} label="Volver" onClick={() => nav.go("hoy")} /><h1>Ajustes</h1></div><span className="e-muted">v{APP_VERSION}</span></div>
 
-      <Card title="Perfil y objetivos">
+      <BubbleCard icon={Target} title="Perfil y objetivos">
         <div className="e-fields">
           <Field label="Altura (cm)"><Input type="number" inputMode="numeric" value={s.profile.heightCm} onChange={(e) => setProfile("heightCm", num(e.target.value))} /></Field>
           <Field label="Días de entreno / semana"><Input type="number" inputMode="numeric" value={s.profile.daysPerWeek} onChange={(e) => setProfile("daysPerWeek", clamp(num(e.target.value, 5), 1, 7))} /></Field>
@@ -3374,7 +3727,7 @@ function SettingsScreen() {
           <Field label="Rutina activa"><Select value={s.activeRoutineId} options={data.routines.map((r) => ({ value: r.id, label: r.name }))} onChange={(e) => store.setSettings({ activeRoutineId: e.target.value })} /></Field>
           <Field label="Descanso por defecto (s)"><Input type="number" inputMode="numeric" value={s.restDefaultSec} onChange={(e) => store.setSettings({ restDefaultSec: clamp(num(e.target.value, 90), 15, 600) })} /></Field>
         </div>
-        <div className="e-label">Objetivo diario fijo{s.programGoals ? " (el programa manda mientras esté activo)" : ""}</div>
+        <div className="e-bubble-sub">Objetivo diario fijo{s.programGoals ? " · el programa manda mientras esté activo" : ""}</div>
         <div className="e-fields">
           <Field label="kcal"><Input type="number" inputMode="numeric" value={s.goals.kcal} onChange={(e) => setGoal("kcal", e.target.value)} /></Field>
           <Field label="Proteína (g)"><Input type="number" inputMode="numeric" value={s.goals.protein} onChange={(e) => setGoal("protein", e.target.value)} /></Field>
@@ -3383,9 +3736,9 @@ function SettingsScreen() {
           <Field label="Agua (ml)"><Input type="number" inputMode="numeric" value={s.goals.waterMl} onChange={(e) => setGoal("waterMl", e.target.value)} /></Field>
         </div>
         <p className="e-muted">Macros: {fmtN(s.goals.protein * 4 + s.goals.carbs * 4 + s.goals.fat * 9)} kcal calculadas frente a {fmtN(s.goals.kcal)} de objetivo.</p>
-      </Card>
+      </BubbleCard>
 
-      <Card title="Programa">
+      <BubbleCard icon={CalendarDays} title="Programa">
         {data.programs.map((pr) => (
           <div key={pr.id} className="e-col" style={{ gap: 10 }}>
             <div className="e-row between"><b>{pr.name}</b><span className="e-muted">{pr.weeks} semanas</span></div>
@@ -3403,9 +3756,9 @@ function SettingsScreen() {
           <Btn size="sm" variant="outline" onClick={() => { store.setSettings({ programSkipped: [] }); toast("Sesiones saltadas restauradas", "ok"); }}>Restaurar sesiones saltadas ({(s.programSkipped || []).length})</Btn>
           <Btn size="sm" variant="outline" icon={RefreshCw} onClick={() => { if (window.confirm("¿Restaurar el programa original de 26 semanas? Se conservan tus sesiones.")) { store.put("programs", { ...SEED_PROGRAM, startDate: data.programs[0]?.startDate || SEED_PROGRAM.startDate }); toast("Programa restaurado", "ok"); } }}>Restaurar programa</Btn>
         </div>
-      </Card>
+      </BubbleCard>
 
-      <Card title="Material">
+      <BubbleCard icon={Layers} title="Material">
         <div className="e-fields">
           <Field label="Peso de la barra olímpica (kg)"><Input type="number" inputMode="decimal" step="0.5" value={s.barbellKg} onChange={(e) => store.setSettings({ barbellKg: num(e.target.value, 20) })} /></Field>
           <Field label="Peso de cada barra de mancuerna (kg)"><Input type="number" inputMode="decimal" step="0.5" value={s.dumbbellBarKg} onChange={(e) => store.setSettings({ dumbbellBarKg: num(e.target.value, 2) })} /></Field>
@@ -3428,10 +3781,13 @@ function SettingsScreen() {
         <Toggle label="Banco con respaldo inclinable" on={inv.bench.incline} onChange={(v) => setInv({ bench: { ...inv.bench, incline: v } })} />
         <Toggle label="Banco con posición declinada" on={inv.bench.decline} onChange={(v) => setInv({ bench: { ...inv.bench, decline: v } })} />
         <div className="e-note"><Info /><span><b>Barra:</b> {barLoads.join(" · ")} kg<br /><b>Par de mancuernas:</b> {pairLoads.join(" · ")} kg por mancuerna<br />Incremento mínimo real: {fmtKg(2 * Math.min(...inv.plates.map((p) => p.kg)))} kg.</span></div>
-      </Card>
+      </BubbleCard>
 
-      <Card title="Home Assistant">
-        <div className="e-row"><span className={`e-status-dot ${haRef.available ? "on" : ""}`} /><span>{haRef.available ? `Conectado · ${Object.keys(haRef.hass.states).length} entidades` : "Sin conexión: la app se ejecuta fuera de Home Assistant"}</span></div>
+      <BubbleCard icon={Wifi} title="Home Assistant">
+        <div className="e-row wrap">
+          <StatusBadge kind={haRef.available ? "ok" : ""} dot>{haRef.available ? "Conectado" : "Sin conexión"}</StatusBadge>
+          <span className="e-muted">{haRef.available ? `${Object.keys(haRef.hass.states).length} entidades disponibles` : "la app se ejecuta fuera de Home Assistant"}</span>
+        </div>
         {noHa && <Note>Los selectores se rellenan con tus entidades reales cuando el panel corre dentro de Home Assistant. La configuración se guarda igualmente.</Note>}
         <Toggle id="ha-enabled" label="Integración activada" hint="Publicar métricas, eventos y avisos" on={s.ha.enabled} onChange={(v) => setHa({ enabled: v })} />
         <div className="e-label">Lecturas</div>
@@ -3465,9 +3821,9 @@ function SettingsScreen() {
           <div className="e-list">{data.haQueue.map((j) => <div key={j.id} className="e-item" style={{ padding: "8px 0", minHeight: 40 }}><span className="e-grow e-stack"><span className="t">{j.label} · {j.domain}.{j.service}</span><span className="s">{j.entity || ""} · {j.attempts} intento{j.attempts > 1 ? "s" : ""} · {j.lastError}</span></span><IconBtn small icon={Trash2} label="Descartar" onClick={() => store.remove("haQueue", j.id)} /></div>)}</div>
           <div className="e-row"><Btn size="sm" variant="soft" icon={RefreshCw} disabled={!haRef.available} onClick={integration.flushQueue}>Reintentar ahora</Btn><Btn size="sm" variant="outline" onClick={() => data.haQueue.forEach((j) => store.remove("haQueue", j.id))}>Vaciar cola</Btn></div>
         </>) : <p className="e-muted">Ninguno. Los envíos que fallen se guardan aquí y se reintentan solos.</p>}
-      </Card>
+      </BubbleCard>
 
-      <Card title="Datos">
+      <BubbleCard icon={Download} title="Datos">
         <p className="e-muted">Lo que registras se guarda en este navegador{db.usesMemory ? " (almacenamiento no disponible: se pierde al recargar)" : ""} y no sale de él. No se sincroniza entre el móvil y el ordenador: para pasarlo de uno a otro, exporta aquí e importa allí. Exporta de vez en cuando como copia de seguridad.</p>
         <div className="e-row wrap">
           <Btn variant="soft" icon={Download} onClick={doExport}>Exportar JSON</Btn>
@@ -3477,11 +3833,11 @@ function SettingsScreen() {
         <Field label="Importar pegando JSON"><textarea className="e-textarea" value={importText} onChange={(e) => setImportText(e.target.value)} placeholder='{"app":"entreno", …}' /></Field>
         {importText && <Btn variant="primary" icon={Upload} onClick={() => doImport(importText)}>Importar texto</Btn>}
         <div className="e-row wrap"><Btn variant="outline" icon={RefreshCw} onClick={resetAll}>Empezar de cero</Btn><Btn variant="danger" icon={Trash2} onClick={wipe}>Borrar historial</Btn></div>
-      </Card>
+      </BubbleCard>
 
-      <Card title="Acerca de">
+      <BubbleCard icon={Info} title="Acerca de">
         <p className="e-muted">Entreno v{APP_VERSION}. Un solo usuario, sin backend. Fase 1: aplicación autónoma. Fase 2: panel personalizado de Home Assistant con este mismo código; la capa de integración ya está construida y se activa sola cuando el panel recibe <span className="e-kbd">hass</span>.</p>
-      </Card>
+      </BubbleCard>
     </div>
   );
 }
@@ -3538,64 +3894,100 @@ function ProgressScreen() {
     setAddW(false); setWKg(""); toast("Peso registrado", "ok");
   };
 
+  const pctGoal = pg && last ? clamp((( pg.program.goals.startKg || 116) - last.ma) / ((pg.program.goals.startKg || 116) - pg.program.goals.targetKg), 0, 1) : null;
+  const volTotal = sum(volData.map((r) => sum(VOL_GROUPS.map((g) => r[g.key]))));
+
   return (
     <div className="e-page wide">
-      <div className="e-header"><h1>Progreso</h1></div>
-      <div className="e-grid2">
-        <Card title="Peso corporal" action={<Btn size="xs" variant="soft" icon={Plus} onClick={() => setAddW(true)}>Registrar</Btn>}>
-          <div className="e-row" style={{ gap: 24, alignItems: "flex-end" }}>
-            <div className="e-stack"><span className="e-label">Actual</span><div className="e-hero"><span className="e-big md">{last ? fmtKg(last.kg) : "–"}</span><span className="e-unit">kg</span></div></div>
-            <div className="e-stack"><span className="e-label">Media 7 d</span><b style={{ fontSize: 22 }}>{last ? fmtKg(last.ma) : "–"}</b></div>
-            <div className="e-stack"><span className="e-label">30 días</span><b style={{ fontSize: 22, color: first30 && last.ma - first30.ma < 0 ? "var(--e-ok)" : "inherit" }}>{first30 && last ? `${last.ma - first30.ma > 0 ? "+" : ""}${fmtKg(last.ma - first30.ma)}` : "–"}</b></div>
-          </div>
-          {pg && last && (() => { const start = pg.program.goals.startKg || 116, tgt = pg.program.goals.targetKg, ms = pg.program.goals.milestoneKg; const pct = clamp((start - last.ma) / (start - tgt), 0, 1); return (
-            <div className="e-col" style={{ gap: 6 }}>
-              <div className="e-row between"><span className="e-muted">Camino a {tgt} kg</span><b>{fmtKg(Math.max(0, last.ma - tgt))} kg por delante</b></div>
-              <div className="e-bar" style={{ height: 10 }}><i style={{ width: `${pct * 100}%`, background: "var(--e-ok)" }} /></div>
-              <div className="e-row between" style={{ fontSize: 11, color: "var(--e-text2)" }}><span>{start} kg inicio</span><span>hito 26 sem: {ms} kg</span><span>{tgt} kg</span></div>
+      <div className="e-header">
+        <div>
+          <div className="e-greet">Tu evolución</div>
+          <h1>Progreso</h1>
+        </div>
+        <ActionButton icon={Plus} onClick={() => setAddW(true)}>Registrar peso</ActionButton>
+      </div>
+
+      <div className="e-grid">
+        <MetricBubble className="e-c3" icon={Scale} label="Peso actual" value={last ? fmtKg(last.kg) : "–"} unit={last ? "kg" : ""}
+          foot={last ? <WeightTrend series={series} /> : <span className="e-muted">sin registros</span>} />
+        <MetricBubble className="e-c3" icon={Activity} label="Media 7 días" value={last ? fmtKg(last.ma) : "–"} unit={last ? "kg" : ""}
+          foot={<span className="e-muted">suaviza el día a día</span>} />
+        <MetricBubble className="e-c3" icon={TrendingUp} label="Últimos 30 días"
+          value={first30 && last ? `${last.ma - first30.ma > 0 ? "+" : ""}${fmtKg(last.ma - first30.ma)}` : "–"} unit={first30 && last ? "kg" : ""}
+          foot={first30 && last ? <span className={`e-trend ${last.ma - first30.ma < 0 ? "down" : last.ma - first30.ma > 0 ? "up" : "flat"}`}>sobre la media</span> : <span className="e-muted">hacen falta 30 días</span>} />
+        <MetricBubble className="e-c3" icon={Target} label={pg ? `Camino a ${pg.program.goals.targetKg} kg` : "Objetivo"}
+          value={pctGoal != null ? `${Math.round(pctGoal * 100)}` : "–"} unit={pctGoal != null ? "%" : ""}
+          foot={pctGoal != null
+            ? <><span className="e-muted">{fmtKg(Math.max(0, last.ma - pg.program.goals.targetKg))} kg</span><ProgressBar value={pctGoal * 100} max={100} tone="var(--e-ok)" /></>
+            : <span className="e-muted">{pg ? "sin registros de peso" : "sin programa activo"}</span>} />
+
+        <div className="e-c8">
+          <BubbleCard icon={Scale} title="Peso corporal"
+            subtitle={scale.entity && data.settings.ha.enabled ? (scale.status === "ok" ? `báscula: ${scale.entity}` : scale.status === "loading" ? "leyendo báscula…" : "báscula no disponible") : "registro manual"}
+            action={<ActionButton icon={Plus} label="Registrar peso" onClick={() => setAddW(true)} />}>
+            {pg && last && (() => { const startKg = pg.program.goals.startKg || 116, tgt = pg.program.goals.targetKg, ms = pg.program.goals.milestoneKg; return (
+              <div className="e-prog">
+                <div className="top"><span className="l">Camino a {tgt} kg</span><span className="v">{fmtKg(Math.max(0, last.ma - tgt))} kg por delante</span></div>
+                <ProgressBar value={pctGoal * 100} max={100} tone="var(--e-ok)" big />
+                <div className="e-row between" style={{ fontSize: 11, color: "var(--e-text2)" }}><span>{startKg} kg inicio</span><span>hito 26 sem: {ms} kg</span><span>{tgt} kg</span></div>
+              </div>
+            ); })()}
+            <Segmented options={[{ value: 30, label: "30 d" }, { value: 90, label: "90 d" }, { value: 365, label: "1 año" }]} value={range} onChange={setRange} />
+            {wSeries.length > 1 ? (<>
+              <LineChart height={220} fmt={(v) => `${fmtKg(v)} kg`} yFmt={fmtKg}
+                data={wSeries.map((p) => ({ label: p.d, kg: p.kg, ma: p.ma }))}
+                series={[{ key: "kg", name: "Peso", color: "var(--e-text2)", width: 1, dots: 2.5 }, { key: "ma", name: "Media 7 días", color: "var(--e-acc)", width: 2.5 }]}
+                refLine={pg ? { y: pg.program.goals.milestoneKg, label: `hito ${pg.program.goals.milestoneKg} kg` } : null} />
+              <span className="e-row e-muted"><span style={{ width: 14, height: 3, background: "var(--e-acc)", borderRadius: 2 }} /> media 7 días <span style={{ width: 14, height: 1, background: "var(--e-text2)", marginLeft: 8 }} /> lecturas</span>
+            </>) : <Empty icon={Scale}>Registra tu peso para ver la evolución.</Empty>}
+          </BubbleCard>
+        </div>
+
+        <div className="e-c4">
+          <BubbleCard icon={Trophy} iconKind="warn" title="Récords recientes" subtitle={prs.length ? `${prs.length} en el historial` : ""} flush>
+            <div className="e-list">
+              {prs.map((p, i) => (
+                <div key={i} className="e-item" style={{ minHeight: 52 }}>
+                  <span className="e-grow e-stack"><span className="t">{p.name}</span><span className="s">{fmtDate(p.date, true)}</span></span>
+                  <span className="v">{num(p.kg) > 0 ? `${fmtKg(p.kg)} kg × ${p.reps}` : `${p.reps} reps`}</span>
+                </div>
+              ))}
+              {!prs.length && <Empty icon={Trophy}>Los récords aparecen aquí al superar tu mejor 1RM estimado.</Empty>}
             </div>
-          ); })()}
-          <Segmented options={[{ value: 30, label: "30 d" }, { value: 90, label: "90 d" }, { value: 365, label: "1 año" }]} value={range} onChange={setRange} />
-          {wSeries.length > 1 ? (
-            <LineChart height={240} fmt={(v) => `${fmtKg(v)} kg`} yFmt={fmtKg}
-              data={wSeries.map((p) => ({ label: p.d, kg: p.kg, ma: p.ma }))}
-              series={[{ key: "kg", name: "Peso", color: "var(--e-text2)", width: 1, dots: 2.5 }, { key: "ma", name: "Media 7 días", color: "var(--e-acc)", width: 2.5 }]}
-              refLine={pg ? { y: pg.program.goals.milestoneKg, label: `hito ${pg.program.goals.milestoneKg} kg` } : null} />
-          ) : <div className="e-chart tall"><Empty icon={Scale}>Registra tu peso para ver la evolución.</Empty></div>}
-          <div className="e-row between">{wSeries.length > 1 ? <span className="e-row e-muted"><span style={{ width: 14, height: 3, background: "var(--e-acc)", borderRadius: 2 }} /> media 7 días <span style={{ width: 14, height: 1, background: "var(--e-text2)", marginLeft: 8 }} /> lecturas</span> : <span />}<span className="e-muted">{scale.entity && data.settings.ha.enabled ? (scale.status === "ok" ? `báscula: ${scale.entity}` : scale.status === "loading" ? "leyendo báscula…" : "báscula no disponible") : "registro manual"}</span></div>
-        </Card>
+          </BubbleCard>
+        </div>
 
-        <Card title="Volumen semanal · series efectivas">
-          {sum(volData.map((r) => sum(VOL_GROUPS.map((g) => r[g.key])))) > 0 ? (
-            <StackedBars height={240} data={volData.map((r) => ({ ...r, label: r.w }))} fmt={(v) => fmtN(v, v % 1 ? 1 : 0)}
-              series={VOL_GROUPS.map((g) => ({ key: g.key, name: g.label, color: g.color }))} />
-          ) : <div className="e-chart tall"><Empty icon={Dumbbell}>Cierra tu primera sesión para ver el volumen por grupo muscular.</Empty></div>}
-          <div className="e-chips">{VOL_GROUPS.map((g) => <span key={g.key} className="e-chip"><span style={{ width: 10, height: 10, borderRadius: 3, background: g.color }} />{g.label}</span>)}</div>
-          <table className="e-table"><thead><tr><th>Esta semana</th><th className="r">Series</th><th className="r">Objetivo 10–20</th></tr></thead><tbody>
-            {MUSCLES.map((m) => { const v = thisWeek[m]; const st = v >= 10 && v <= 20 ? "ok" : v > 20 ? "warn" : ""; return <tr key={m}><td style={{ textTransform: "capitalize" }}>{m}</td><td className="r"><b>{fmtN(v, 1)}</b></td><td className="r"><div className="e-bar" style={{ width: 90, marginLeft: "auto" }}><i className={v > 20 ? "over" : ""} style={{ width: `${clamp((v / 20) * 100, 0, 100)}%`, background: st === "ok" ? "var(--e-ok)" : undefined }} /></div></td></tr>; })}
-          </tbody></table>
-        </Card>
+        <div className="e-c8">
+          <BubbleCard icon={Layers} title="Volumen semanal" subtitle="series efectivas por grupo muscular">
+            {volTotal > 0 ? (<>
+              <StackedBars height={220} data={volData.map((r) => ({ ...r, label: r.w }))} fmt={(v) => fmtN(v, v % 1 ? 1 : 0)}
+                series={VOL_GROUPS.map((g) => ({ key: g.key, name: g.label, color: g.color }))} />
+              <div className="e-chips">{VOL_GROUPS.map((g) => <span key={g.key} className="e-chip"><span style={{ width: 10, height: 10, borderRadius: 3, background: g.color }} />{g.label}</span>)}</div>
+            </>) : <Empty icon={Dumbbell}>Cierra tu primera sesión para ver el volumen por grupo muscular.</Empty>}
+            <table className="e-table"><thead><tr><th>Esta semana</th><th className="r">Series</th><th className="r">Objetivo 10–20</th></tr></thead><tbody>
+              {MUSCLES.map((m) => { const v = thisWeek[m]; const st = v >= 10 && v <= 20 ? "ok" : v > 20 ? "warn" : ""; return (
+                <tr key={m}><td style={{ textTransform: "capitalize" }}>{m}</td><td className="r"><b>{fmtN(v, 1)}</b></td>
+                  <td className="r"><div style={{ width: 90, marginLeft: "auto" }}><ProgressBar value={v} max={20} tone={st === "ok" ? "var(--e-ok)" : undefined} /></div></td></tr>
+              ); })}
+            </tbody></table>
+          </BubbleCard>
+        </div>
 
-        <Card title="1RM estimado (Epley)">
-          {withHistory.length ? (<>
-            <Select value={chosen?.id} options={withHistory.map((e) => ({ value: e.id, label: e.name }))} onChange={(e) => setExId(e.target.value)} aria-label="Ejercicio" />
-            <div className="e-row" style={{ gap: 24 }}>
-              <div className="e-stack"><span className="e-label">Mejor</span><b style={{ fontSize: 22 }}>{fmtKg(Math.max(...hist.map((h) => h.e1rm)))} kg</b></div>
-              <div className="e-stack"><span className="e-label">Último</span><b style={{ fontSize: 22 }}>{fmtKg(hist[hist.length - 1].e1rm)} kg</b></div>
-              <div className="e-stack"><span className="e-label">Sesiones</span><b style={{ fontSize: 22 }}>{hist.length}</b></div>
-            </div>
-            <LineChart height={200} fmt={(v) => `${fmtKg(v)} kg`} yFmt={fmtKg}
-              data={hist.map((h) => ({ label: h.d, e1rm: h.e1rm }))}
-              series={[{ key: "e1rm", name: "1RM estimado", color: "var(--e-acc)", width: 2, dots: 3 }]} />
-          </>) : <Empty icon={TrendingUp}>Cierra alguna sesión con carga para ver la evolución del 1RM.</Empty>}
-        </Card>
-
-        <Card title="Récords recientes" flush>
-          <div className="e-list" style={{ marginTop: 8 }}>
-            {prs.map((p, i) => <div key={i} className="e-item" style={{ minHeight: 48 }}><Trophy style={{ width: 18, color: "var(--e-warn)" }} /><span className="e-grow e-stack"><span className="t">{p.name}</span><span className="s">{fmtDate(p.date, true)}</span></span><span className="v">{num(p.kg) > 0 ? `${fmtKg(p.kg)} kg × ${p.reps}` : `${p.reps} reps`}</span></div>)}
-            {!prs.length && <Empty icon={Trophy}>Los récords aparecen aquí al superar tu mejor 1RM estimado.</Empty>}
-          </div>
-        </Card>
+        <div className="e-c4">
+          <BubbleCard icon={TrendingUp} title="1RM estimado" subtitle="fórmula de Epley">
+            {withHistory.length ? (<>
+              <Select value={chosen?.id} options={withHistory.map((e) => ({ value: e.id, label: e.name }))} onChange={(e) => setExId(e.target.value)} aria-label="Ejercicio" />
+              <div className="e-row between">
+                <div className="e-stack"><span className="e-label">Mejor</span><b style={{ fontSize: 20 }}>{fmtKg(Math.max(...hist.map((h) => h.e1rm)))} kg</b></div>
+                <div className="e-stack"><span className="e-label">Último</span><b style={{ fontSize: 20 }}>{fmtKg(hist[hist.length - 1].e1rm)} kg</b></div>
+                <div className="e-stack"><span className="e-label">Sesiones</span><b style={{ fontSize: 20 }}>{hist.length}</b></div>
+              </div>
+              <LineChart height={180} fmt={(v) => `${fmtKg(v)} kg`} yFmt={fmtKg}
+                data={hist.map((h) => ({ label: h.d, e1rm: h.e1rm }))}
+                series={[{ key: "e1rm", name: "1RM estimado", color: "var(--e-acc)", width: 2, dots: 3 }]} />
+            </>) : <Empty icon={TrendingUp}>Cierra alguna sesión con carga para ver la evolución del 1RM.</Empty>}
+          </BubbleCard>
+        </div>
       </div>
       <Sheet open={addW} onClose={() => setAddW(false)} title="Registrar peso" footer={<Btn variant="primary" full icon={Check} onClick={saveWeight}>Guardar</Btn>}>
         <div className="e-fields">
@@ -3648,8 +4040,8 @@ function App() {
           <div className="e-nav-inner">
             {TABS.map((t) => { const I = t.icon; return (
               <button key={t.id} className={nav.tab === t.id ? "on" : ""} onClick={() => go(t.id)} aria-current={nav.tab === t.id ? "page" : undefined}>
-                <span style={{ position: "relative" }}><I />{t.id === "entreno" && active && <span style={{ position: "absolute", top: -2, right: -4, width: 8, height: 8, borderRadius: "50%", background: "var(--e-ok)" }} />}</span>
-                {t.label}
+                <span className="ico"><I />{t.id === "entreno" && active && <span className="dot" title="Sesión en curso" />}</span>
+                <span>{t.label}</span>
               </button>
             ); })}
           </div>

@@ -94,8 +94,32 @@ Un único string `CSS` inyectado dentro del propio elemento (funciona aunque HA
 lo monte en un shadow root). Todos los colores derivan de variables del frontend
 de Home Assistant (`--primary-background-color`, `--card-background-color`,
 `--primary-text-color`, `--secondary-text-color`, `--divider-color`,
-`--primary-color`) con respaldo oscuro propio para cuando la app corre fuera de
-HA. No escribas colores literales en los componentes: usa los tokens `--e-*`.
+`--primary-color`, `--accent-color`, `--success-color`, `--error-color`,
+`--warning-color`, `--primary-font-family`) con respaldo oscuro propio para
+cuando la app corre fuera de HA. No escribas colores literales en los
+componentes: usa los tokens `--e-*`. Para medidas, los tokens de diseño
+(`--e-radius-sm/md/lg/pill`, `--e-gap`, `--e-pad`, `--e-shadow`,
+`--e-shadow-lift`) antes que números sueltos.
+
+### Sistema de burbujas
+
+La interfaz es un dashboard minimalista construido sobre una sola pieza:
+
+- **`BubbleCard`** (`.e-bubble`): icono en burbuja circular, título, subtítulo,
+  acción y contenido. Es la única tarjeta; no hay `Card` ni `.e-card`.
+- Derivadas: **`MetricBubble`** (métrica compacta: icono, etiqueta, valor grande,
+  pie con tendencia), **`ProgressBubble`**, **`WorkoutBubble`** (bloque de
+  entrenamiento), **`ExerciseBubble`** (ejercicio numerado con las series
+  desplegables), más `SectionHeader`, `StatusBadge`, `ActionButton`,
+  `ProgressBar`, `SegmentBar` e `IconBubble`.
+- No conviertas cada dato en una tarjeta: agrupa lo relacionado dentro de una
+  burbuja. Los títulos cortos van en versalita; con `titleBig`, en texto normal.
+- **Rejilla de 12 columnas**: `.e-grid` con `.e-c3` (mitad en móvil, cuarto en
+  escritorio, para métricas), `.e-c4`, `.e-c6` y `.e-c8`. Todo ocupa el ancho
+  completo por debajo de 860 px. `.e-grid2` es la variante de dos mitades.
+- Animaciones cortas y sutiles (entrada de burbujas, cambio de estado, pulsación).
+  Todas quedan anuladas con `prefers-reduced-motion`.
+- Los iconos son de `lucide-react`; no metas otra librería.
 
 ## Empaquetado
 

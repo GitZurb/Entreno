@@ -20,7 +20,20 @@ npm run dev        # lo mismo, reconstruyendo al guardar
 ```
 
 Sin dependencias de CDN en tiempo de ejecución: Preact, los iconos y las gráficas
-(SVG propio, sin librería) van dentro del bundle (223 kB minificado, 65 kB con gzip).
+(SVG propio, sin librería) van dentro del bundle (237 kB minificado, 72 kB con gzip).
+
+## Interfaz
+
+Dashboard minimalista construido sobre una única pieza reutilizable, la burbuja
+(`BubbleCard`): icono en círculo, título, subtítulo, acción y contenido, con
+esquinas de 24 px, mucho espacio negativo y sin bordes ni sombras marcadas. De ahí
+derivan `MetricBubble` (métricas compactas), `ProgressBubble`, `WorkoutBubble`,
+`ExerciseBubble` (ejercicio con series desplegables), `SectionHeader`,
+`StatusBadge` y `ActionButton`. La rejilla es de 12 columnas (`e-grid` + `e-c3`,
+`e-c4`, `e-c6`, `e-c8`): un mismo sistema que en móvil apila y en escritorio
+reparte. Todos los colores salen de las variables del frontend de Home Assistant,
+así que la app adopta el tema de HA (claro u oscuro) y fuera de él usa su propio
+respaldo oscuro.
 
 ## Fase 1 · aplicación autónoma
 
