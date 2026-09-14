@@ -285,6 +285,24 @@ button.e-item:hover{ background:var(--e-card2); }
 .e-status-dot{ width:8px; height:8px; border-radius:50%; background:var(--e-text2); display:inline-block; }
 .e-status-dot.on{ background:var(--e-ok); } .e-status-dot.err{ background:var(--e-err); }
 .e-spacer{ flex:1; }
+.e-thumb{ flex:none; width:64px; height:48px; border-radius:10px; background:var(--e-card2); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.e-thumb.sm{ width:52px; height:39px; border-radius:8px; }
+.e-thumb svg{ width:100%; height:100%; }
+.e-timeline{ display:grid; grid-template-columns:repeat(26,1fr); gap:3px; }
+.e-timeline i{ display:block; aspect-ratio:1; border-radius:3px; background:var(--e-card2); }
+.e-timeline i.today{ box-shadow:0 0 0 2px var(--e-acc); }
+.e-timeline i.done{ background:var(--e-ok) !important; }
+.e-timeline i.skipped{ background:var(--e-div) !important; }
+.e-timeline i.missed{ background:var(--e-err-soft) !important; box-shadow: inset 0 0 0 1px var(--e-err); }
+.e-timeline span{ font-size:9px; color:var(--e-text2); text-align:center; }
+.e-blockbar{ display:flex; gap:3px; height:12px; }
+.e-blockbar i{ flex:1; border-radius:3px; opacity:.3; }
+.e-blockbar i.past{ opacity:1; }
+.e-blockbar i.now{ opacity:1; box-shadow:0 0 0 2px var(--e-text); }
+.e-daydots{ display:flex; gap:6px; }
+.e-daydots i{ width:14px; height:14px; border-radius:50%; background:var(--e-card2); display:block; }
+.e-daydots i.done{ background:var(--e-ok); } .e-daydots i.missed{ background:var(--e-err); opacity:.7; } .e-daydots i.skipped{ background:var(--e-div); } .e-daydots i.today{ box-shadow:0 0 0 2px var(--e-acc); }
+.e-hero-card{ border-left:4px solid var(--e-acc); }
 `;
 
 let stylesInjected = false;
@@ -325,10 +343,10 @@ const num = (v, fallback = 0) => { const n = typeof v === "number" ? v : parseFl
  * copia en memoria (la app sigue funcionando, sin persistencia).
  * ========================================================================== */
 const DB_NAME = "entreno";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORES = {
   settings: "key", inventory: "key", exercises: "id", routines: "id", sessions: "id",
-  foods: "id", recipes: "id", diary: "date", bodyweight: "date", haQueue: "id",
+  foods: "id", recipes: "id", diary: "date", bodyweight: "date", haQueue: "id", programs: "id",
 };
 
 const db = (() => {
@@ -413,6 +431,233 @@ const db = (() => {
 })();
 
 /* =============================================================================
+ * ILUSTRACIONES DE EJERCICIOS · pictogramas vectoriales propios
+ * Figura de perfil parametrizada por ángulos (0° = derecha, 90° = abajo).
+ * Cada ejercicio define dos fotogramas: posición inicial y final.
+ * ========================================================================== */
+const SEG = { torso: 40, neck: 4, head: 8, uarm: 26, farm: 24, thigh: 34, shin: 32, foot: 12 };
+const dirv = (a) => [Math.cos((a * Math.PI) / 180), Math.sin((a * Math.PI) / 180)];
+const adv = (p, a, l) => { const d = dirv(a); return [p[0] + d[0] * l, p[1] + d[1] * l]; };
+
+function solvePose(pose) {
+  const hip = pose.hip;
+  const shoulder = adv(hip, pose.torso, SEG.torso);
+  const headA = pose.head ?? pose.torso;
+  const head = adv(shoulder, headA, SEG.neck + SEG.head);
+  const limb = (armA, foreA) => { const elbow = adv(shoulder, armA, SEG.uarm); const hand = adv(elbow, foreA, SEG.farm); return { elbow, hand }; };
+  const leg = (thighA, shinA, footA) => { const knee = adv(hip, thighA, SEG.thigh); const ankle = adv(knee, shinA, SEG.shin); const toe = adv(ankle, footA, SEG.foot); return { knee, ankle, toe }; };
+  const arm = limb(pose.arm, pose.fore);
+  const arm2 = pose.arm2 != null ? limb(pose.arm2, pose.fore2 ?? pose.fore) : null;
+  const lg = leg(pose.thigh, pose.shin, pose.foot);
+  const lg2 = pose.thigh2 != null ? leg(pose.thigh2, pose.shin2 ?? pose.shin, pose.foot2 ?? pose.foot) : null;
+  return { hip, shoulder, head, arm, arm2, leg: lg, leg2: lg2 };
+}
+
+function Equip({ kind, at, ang = 0 }) {
+  if (!kind || !at) return null;
+  const [x, y] = at;
+  const acc = "var(--e-acc)";
+  if (kind === "bar") return <g><circle cx={x} cy={y} r={9} fill="var(--e-card2)" stroke={acc} strokeWidth={3} /><circle cx={x} cy={y} r={2} fill={acc} /></g>;
+  if (kind === "db") return <g transform={`rotate(${ang} ${x} ${y})`}><rect x={x - 8} y={y - 2} width={16} height={4} rx={2} fill={acc} /><circle cx={x - 8} cy={y} r={4.5} fill={acc} /><circle cx={x + 8} cy={y} r={4.5} fill={acc} /></g>;
+  if (kind === "db1") return <g><circle cx={x} cy={y} r={5.5} fill="var(--e-card2)" stroke={acc} strokeWidth={3} /></g>;
+  if (kind === "kb") return <g><path d={`M${x - 5} ${y - 6} a5 5 0 0 1 10 0`} fill="none" stroke={acc} strokeWidth={3} /><circle cx={x} cy={y + 2} r={7} fill={acc} /></g>;
+  if (kind === "plate") return <g><circle cx={x} cy={y} r={8} fill="var(--e-card2)" stroke={acc} strokeWidth={3} /><circle cx={x} cy={y} r={2} fill={acc} /></g>;
+  return null;
+}
+
+function BenchShape({ bench }) {
+  if (!bench) return null;
+  const { x, y, w, type = "flat" } = bench;
+  const fill = "var(--e-card2)", stroke = "var(--e-div)";
+  const seatW = type === "flat" ? w : w * 0.45;
+  const legs = <g stroke={stroke} strokeWidth={3} strokeLinecap="round"><line x1={x + 10} y1={y + 8} x2={x + 10} y2={y + 34} /><line x1={x + seatW - 10} y1={y + 8} x2={x + seatW - 10} y2={y + 34} /></g>;
+  if (type === "flat") return <g>{legs}<rect x={x} y={y} width={w} height={8} rx={3} fill={fill} stroke={stroke} strokeWidth={1.5} /></g>;
+  const ang = type === "incline" ? -38 : 18;
+  const bx = x + seatW - 2, by = y + 4;
+  return <g>{legs}<rect x={x} y={y} width={seatW} height={8} rx={3} fill={fill} stroke={stroke} strokeWidth={1.5} /><g transform={`rotate(${ang} ${bx} ${by})`}><rect x={bx} y={by - 4} width={w - seatW + 2} height={8} rx={3} fill={fill} stroke={stroke} strokeWidth={1.5} /></g></g>;
+}
+
+// Dibuja un fotograma. `pose` acepta: hip, torso, head, arm, fore, arm2, fore2, thigh, shin, foot,
+// thigh2, shin2, foot2, equip ('bar' | 'db' | 'db1' | 'kb' | 'plate'), equipAt ('hand' | 'hand2' | 'shoulder' | 'hip' | 'chest'), bench, ground, wall.
+function Figure({ pose, size = 120, muted = false }) {
+  const P = solvePose(pose);
+  const body = muted ? "var(--e-text2)" : "var(--e-text)";
+  const back = "color-mix(in srgb, var(--e-text2) 55%, transparent)";
+  const sw = 6;
+  const seg = (a, b, color = body) => <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={color} strokeWidth={sw} strokeLinecap="round" />;
+  const equipPt = pose.equipAt === "shoulder" ? adv(P.shoulder, pose.torso, 4) : pose.equipAt === "hip" ? P.hip : pose.equipAt === "chest" ? adv(P.shoulder, pose.torso + 180, 14) : pose.equipAt === "hand2" && P.arm2 ? P.arm2.hand : P.arm.hand;
+  const ground = pose.ground ?? 132;
+  return (
+    <svg viewBox="0 0 200 150" width={size} height={size * 0.75} aria-hidden="true" style={{ display: "block", maxWidth: "100%" }}>
+      <line x1={8} y1={ground} x2={192} y2={ground} stroke="var(--e-div)" strokeWidth={2} strokeLinecap="round" />
+      {pose.wall && <line x1={pose.wall} y1={20} x2={pose.wall} y2={ground} stroke="var(--e-div)" strokeWidth={3} />}
+      <BenchShape bench={pose.bench} />
+      {P.leg2 && <g>{seg(P.hip, P.leg2.knee, back)}{seg(P.leg2.knee, P.leg2.ankle, back)}{seg(P.leg2.ankle, P.leg2.toe, back)}</g>}
+      {P.arm2 && <g>{seg(P.shoulder, P.arm2.elbow, back)}{seg(P.arm2.elbow, P.arm2.hand, back)}</g>}
+      {seg(P.hip, P.leg.knee)}{seg(P.leg.knee, P.leg.ankle)}{seg(P.leg.ankle, P.leg.toe)}
+      {seg(P.hip, P.shoulder)}
+      <circle cx={P.head[0]} cy={P.head[1]} r={SEG.head} fill={body} />
+      {seg(P.shoulder, P.arm.elbow)}{seg(P.arm.elbow, P.arm.hand)}
+      <Equip kind={pose.equip} at={equipPt} ang={pose.equipAng} />
+    </svg>
+  );
+}
+
+// Poses base
+const STAND = { hip: [92, 64], torso: -90, thigh: 90, shin: 90, foot: 0, arm: 90, fore: 90 };
+const st = (o) => ({ ...STAND, ...o });
+const SUPINE = { hip: [74, 92], torso: 0, head: 0, thigh: 150, shin: 100, foot: 60, arm: -90, fore: -90, ground: 136, bench: { x: 30, y: 96, w: 120, type: "flat" } };
+const sup = (o) => ({ ...SUPINE, ...o });
+const INCLINE = { ...SUPINE, hip: [72, 96], torso: -36, head: -36, thigh: 160, shin: 100, bench: { x: 30, y: 100, w: 124, type: "incline" }, ground: 136 };
+const inc = (o) => ({ ...INCLINE, ...o });
+const DECLINE = { ...SUPINE, hip: [70, 88], torso: 18, head: 18, thigh: 175, shin: 95, foot: 45, bench: { x: 30, y: 92, w: 124, type: "decline" }, ground: 136 };
+const dec = (o) => ({ ...DECLINE, ...o });
+const SEATED = { hip: [92, 90], torso: -90, thigh: 0, shin: 90, foot: 0, arm: 90, fore: 90, bench: { x: 60, y: 96, w: 64, type: "flat" }, ground: 136 };
+const seat = (o) => ({ ...SEATED, ...o });
+const HINGE = { hip: [78, 76], torso: -25, head: -20, thigh: 85, shin: 90, foot: 0, arm: 85, fore: 88 };
+const hinge = (o) => ({ ...HINGE, ...o });
+const PRONE_INCLINE = { hip: [64, 104], torso: -40, head: -30, thigh: 150, shin: 95, foot: 60, arm: 95, fore: 95, ground: 136, bench: { x: 26, y: 108, w: 124, type: "incline" } };
+
+const FG = (a, b, thumb = 1) => ({ frames: [a, b], thumb });
+const EXERCISE_FIGURES = {
+  // Pecho
+  press_banca: FG(sup({ arm: -150, fore: -40, equip: "bar" }), sup({ arm: -90, fore: -90, equip: "bar" })),
+  press_inclinado: FG(inc({ arm: 170, fore: -70, equip: "bar" }), inc({ arm: -126, fore: -126, equip: "bar" })),
+  press_declinado: FG(dec({ arm: -140, fore: -30, equip: "bar" }), dec({ arm: -72, fore: -72, equip: "bar" })),
+  press_mancuernas: FG(sup({ arm: -160, fore: -30, equip: "db1" }), sup({ arm: -90, fore: -90, equip: "db1" })),
+  press_inclinado_mancuernas: FG(inc({ arm: 175, fore: -65, equip: "db1" }), inc({ arm: -126, fore: -126, equip: "db1" })),
+  press_suelo: FG({ hip: [74, 114], torso: 0, head: 0, thigh: 140, shin: 80, foot: 60, arm: -160, fore: -30, equip: "bar", ground: 122 }, { hip: [74, 114], torso: 0, head: 0, thigh: 140, shin: 80, foot: 60, arm: -90, fore: -90, equip: "bar", ground: 122 }),
+  aperturas: FG(sup({ arm: -172, fore: -150, equip: "db1" }), sup({ arm: -95, fore: -92, equip: "db1" })),
+  flexiones: FG({ hip: [92, 116], torso: -170, thigh: 12, shin: 10, foot: 80, arm: 20, fore: 150 }, { hip: [92, 98], torso: -152, thigh: 28, shin: 28, foot: 80, arm: 90, fore: 90 }),
+  flexiones_declinadas: FG({ hip: [96, 104], torso: -160, thigh: 0, shin: 0, foot: 90, arm: 30, fore: 145, bench: { x: 128, y: 104, w: 56, type: "flat" }, ground: 138 }, { hip: [96, 86], torso: -140, thigh: 12, shin: 10, foot: 90, arm: 88, fore: 90, bench: { x: 128, y: 104, w: 56, type: "flat" }, ground: 138 }),
+  pullover: FG(sup({ hip: [84, 92], arm: -90, fore: -90, equip: "db1", bench: { x: 70, y: 96, w: 60 } }), sup({ hip: [84, 92], arm: -172, fore: -170, equip: "db1", bench: { x: 70, y: 96, w: 60 } })),
+  // Espalda
+  remo_barra: FG(hinge({ arm: 70, fore: 95, equip: "bar" }), hinge({ arm: 140, fore: 40, equip: "bar" })),
+  remo_mancuerna: FG({ hip: [70, 84], torso: -8, head: -5, thigh: 95, shin: 92, foot: 0, thigh2: 20, shin2: 100, foot2: 0, arm2: 60, fore2: 95, arm: 95, fore: 92, equip: "db1", bench: { x: 96, y: 108, w: 84, type: "flat" }, ground: 138 }, { hip: [70, 84], torso: -8, head: -5, thigh: 95, shin: 92, foot: 0, thigh2: 20, shin2: 100, foot2: 0, arm2: 60, fore2: 95, arm: 150, fore: 60, equip: "db1", bench: { x: 96, y: 108, w: 84, type: "flat" }, ground: 138 }),
+  remo_apoyado: FG({ ...PRONE_INCLINE, equip: "db1" }, { ...PRONE_INCLINE, arm: 160, fore: 40, equip: "db1" }),
+  peso_muerto: FG({ hip: [78, 88], torso: -35, head: -25, thigh: 70, shin: 95, foot: 0, arm: 80, fore: 85, equip: "bar" }, st({ equip: "bar", arm: 92, fore: 92 })),
+  peso_muerto_rumano: FG(st({ equip: "bar", arm: 92, fore: 92 }), hinge({ hip: [76, 70], thigh: 92, arm: 80, fore: 88, equip: "bar" })),
+  remo_kettlebell: FG(hinge({ arm: 75, fore: 95, equip: "kb" }), hinge({ arm: 140, fore: 50, equip: "kb" })),
+  encogimientos: FG(st({ equip: "bar", arm: 95, fore: 95 }), st({ hip: [92, 60], equip: "bar", arm: 96, fore: 96 })),
+  superman: FG({ hip: [88, 96], torso: 20, head: 20, thigh: 175, shin: 100, foot: 60, arm: 110, fore: 110, bench: { x: 30, y: 100, w: 70, type: "flat" }, ground: 136 }, { hip: [88, 96], torso: -10, head: -10, thigh: 175, shin: 100, foot: 60, arm: 200, fore: 190, bench: { x: 30, y: 100, w: 70, type: "flat" }, ground: 136 }),
+  // Hombro
+  press_militar: FG(st({ arm: -150, fore: -50, equip: "bar" }), st({ arm: -92, fore: -90, equip: "bar" })),
+  press_hombro_mancuernas: FG(seat({ arm: -140, fore: -60, equip: "db1" }), seat({ arm: -92, fore: -90, equip: "db1" })),
+  press_arnold: FG(seat({ arm: 20, fore: -80, equip: "db1" }), seat({ arm: -92, fore: -90, equip: "db1" })),
+  elevaciones_laterales: FG(st({ arm: 95, fore: 95, arm2: 85, fore2: 85, equip: "db1" }), st({ arm: 5, fore: 8, arm2: 175, fore2: 172, equip: "db1" })),
+  elevaciones_frontales_disco: FG(st({ arm: 80, fore: 80, equip: "plate" }), st({ arm: -5, fore: -5, equip: "plate" })),
+  pajaros: FG(hinge({ hip: [80, 78], torso: -30, arm: 100, fore: 100, equip: "db1" }), hinge({ hip: [80, 78], torso: -30, arm: 200, fore: 195, arm2: 100, fore2: 100, equip: "db1" })),
+  remo_menton: FG(st({ arm: 92, fore: 92, equip: "bar" }), st({ arm: 175, fore: 40, equip: "bar" })),
+  // Bíceps
+  curl_barra: FG(st({ arm: 92, fore: 92, equip: "bar" }), st({ arm: 92, fore: -40, equip: "bar" })),
+  curl_alterno: FG(st({ arm: 92, fore: -30, arm2: 90, fore2: 90, equip: "db1" }), st({ arm: 92, fore: 92, arm2: 90, fore2: -30, equip: "db1", equipAt: "hand2" })),
+  curl_martillo: FG(st({ arm: 92, fore: 92, equip: "db", equipAng: 90 }), st({ arm: 92, fore: -45, equip: "db", equipAng: 90 })),
+  curl_inclinado: FG(inc({ hip: [70, 96], torso: -50, head: -50, arm: 100, fore: 100, thigh: 150, shin: 95, foot: 40, equip: "db1" }), inc({ hip: [70, 96], torso: -50, head: -50, arm: 100, fore: -20, thigh: 150, shin: 95, foot: 40, equip: "db1" })),
+  curl_concentrado: FG(seat({ torso: -70, head: -60, arm: 100, fore: 100, thigh: 10, equip: "db1" }), seat({ torso: -70, head: -60, arm: 100, fore: -40, thigh: 10, equip: "db1" })),
+  // Tríceps
+  press_frances: FG(sup({ arm: -80, fore: 175, equip: "bar" }), sup({ arm: -80, fore: -80, equip: "bar" })),
+  extension_triceps_mancuerna: FG(seat({ arm: -110, fore: 130, equip: "db1" }), seat({ arm: -100, fore: -95, equip: "db1" })),
+  fondos_banco: FG({ hip: [96, 96], torso: -80, head: -80, thigh: 10, shin: 85, foot: 0, arm: 140, fore: 60, bench: { x: 30, y: 92, w: 60, type: "flat" }, ground: 136 }, { hip: [96, 76], torso: -85, head: -85, thigh: 20, shin: 85, foot: 0, arm: 125, fore: 100, bench: { x: 30, y: 92, w: 60, type: "flat" }, ground: 136 }),
+  press_cerrado: FG(sup({ arm: -165, fore: -25, equip: "bar" }), sup({ arm: -92, fore: -90, equip: "bar" })),
+  patada_triceps: FG(hinge({ hip: [80, 78], torso: -30, arm: 160, fore: 80, equip: "db1" }), hinge({ hip: [80, 78], torso: -30, arm: 160, fore: 165, equip: "db1" })),
+  // Pierna
+  sentadilla_frontal: FG(st({ arm: -60, fore: 175, equip: "bar", equipAt: "shoulder" }), { hip: [78, 94], torso: -75, head: -70, thigh: 40, shin: 115, foot: 0, arm: -50, fore: 175, equip: "bar", equipAt: "shoulder" }),
+  sentadilla_trasera: FG(st({ arm: 150, fore: -110, equip: "bar", equipAt: "shoulder" }), { hip: [72, 94], torso: -62, head: -55, thigh: 40, shin: 115, foot: 0, arm: 150, fore: -110, equip: "bar", equipAt: "shoulder" }),
+  sentadilla_goblet: FG(st({ arm: 130, fore: -60, equip: "kb" }), { hip: [78, 96], torso: -78, head: -72, thigh: 40, shin: 115, foot: 0, arm: 130, fore: -60, equip: "kb" }),
+  sentadilla_banco: FG(st({ arm: 130, fore: -60, equip: "kb" }), { hip: [70, 96], torso: -70, head: -65, thigh: 20, shin: 110, foot: 0, arm: 130, fore: -60, equip: "kb", bench: { x: 6, y: 100, w: 60, type: "flat" }, ground: 136 }),
+  sentadilla_pared: FG({ hip: [76, 94], torso: -90, head: -90, thigh: 0, shin: 90, foot: 0, arm: 90, fore: 90, wall: 76 }, { hip: [76, 94], torso: -90, head: -90, thigh: 0, shin: 90, foot: 0, arm: 90, fore: 90, wall: 76 }),
+  sentadilla_bulgara: FG({ hip: [86, 72], torso: -82, head: -80, thigh: 75, shin: 92, foot: 0, thigh2: 160, shin2: 30, foot2: 90, arm: 95, fore: 95, equip: "db1", bench: { x: 118, y: 96, w: 70, type: "flat" }, ground: 136 }, { hip: [82, 92], torso: -80, head: -76, thigh: 40, shin: 112, foot: 0, thigh2: 165, shin2: 40, foot2: 90, arm: 95, fore: 95, equip: "db1", bench: { x: 118, y: 96, w: 70, type: "flat" }, ground: 136 }),
+  zancadas: FG(st({ equip: "db1", arm: 92, fore: 92 }), { hip: [90, 84], torso: -88, head: -88, thigh: 40, shin: 100, foot: 0, thigh2: 135, shin2: 60, foot2: 90, arm: 92, fore: 92, equip: "db1" }),
+  zancada_inversa_barra: FG(st({ arm: 150, fore: -110, equip: "bar", equipAt: "shoulder" }), { hip: [90, 84], torso: -85, head: -85, thigh: 40, shin: 100, foot: 0, thigh2: 135, shin2: 60, foot2: 90, arm: 150, fore: -110, equip: "bar", equipAt: "shoulder" }),
+  step_up: FG({ hip: [80, 66], torso: -85, head: -85, thigh: 90, shin: 90, foot: 0, thigh2: 30, shin2: 110, foot2: 0, arm: 92, fore: 92, equip: "db1", bench: { x: 108, y: 104, w: 70, type: "flat" }, ground: 136 }, { hip: [120, 42], torso: -90, head: -90, thigh: 90, shin: 90, foot: 0, thigh2: 100, shin2: 110, foot2: 20, arm: 92, fore: 92, equip: "db1", bench: { x: 108, y: 104, w: 70, type: "flat" }, ground: 136 }),
+  sentadilla_mancuernas: FG(st({ equip: "db1", arm: 92, fore: 92 }), { hip: [78, 94], torso: -70, head: -65, thigh: 40, shin: 115, foot: 0, arm: 95, fore: 95, equip: "db1" }),
+  rdl_mancuernas: FG(st({ equip: "db1", arm: 92, fore: 92 }), hinge({ hip: [76, 70], thigh: 92, arm: 80, fore: 88, equip: "db1" })),
+  hip_thrust: FG({ hip: [96, 112], torso: -140, head: -120, thigh: 60, shin: 100, foot: 0, arm: 20, fore: 60, equip: "bar", equipAt: "hip", bench: { x: 20, y: 96, w: 46, type: "flat" }, ground: 136 }, { hip: [96, 90], torso: -165, head: -140, thigh: 20, shin: 100, foot: 0, arm: 30, fore: 60, equip: "bar", equipAt: "hip", bench: { x: 20, y: 96, w: 46, type: "flat" }, ground: 136 }),
+  puente_gluteo_una_pierna: FG({ hip: [96, 122], torso: 180, head: 180, thigh: -60, shin: 90, foot: 0, thigh2: -30, shin2: -30, foot2: 60, arm: 20, fore: 20, ground: 132 }, { hip: [96, 106], torso: 165, head: 160, thigh: -50, shin: 90, foot: 0, thigh2: -20, shin2: -20, foot2: 70, arm: 30, fore: 30, ground: 132 }),
+  buenos_dias: FG(st({ arm: 150, fore: -110, equip: "bar", equipAt: "shoulder" }), hinge({ hip: [76, 72], thigh: 92, arm: 150, fore: -110, equip: "bar", equipAt: "shoulder" })),
+  pm_una_pierna: FG(st({ equip: "db1", arm: 92, fore: 92 }), { hip: [84, 70], torso: -15, head: -10, thigh: 92, shin: 90, foot: 0, thigh2: 170, shin2: 178, foot2: 100, arm: 85, fore: 88, equip: "db1" }),
+  swing_kb: FG(hinge({ hip: [78, 76], torso: -30, arm: 60, fore: 100, equip: "kb" }), st({ hip: [92, 66], arm: -5, fore: 0, equip: "kb" })),
+  curl_nordico: FG({ hip: [90, 80], torso: -90, head: -90, thigh: 90, shin: 0, foot: 0, arm: 60, fore: 90, bench: { x: 128, y: 100, w: 60, type: "flat" }, ground: 118 }, { hip: [70, 92], torso: -40, head: -35, thigh: 60, shin: 0, foot: 0, arm: 40, fore: 60, bench: { x: 128, y: 100, w: 60, type: "flat" }, ground: 118 }),
+  gemelo_pie: FG(st({ hip: [92, 64], equip: "db1", arm: 92, fore: 92, foot: 0 }), st({ hip: [92, 56], equip: "db1", arm: 92, fore: 92, foot: 40 })),
+  gemelo_una_pierna: FG(st({ hip: [92, 64], equip: "db1", arm: 92, fore: 92, thigh2: 100, shin2: 150, foot2: 60 }), st({ hip: [92, 56], equip: "db1", arm: 92, fore: 92, foot: 40, thigh2: 100, shin2: 150, foot2: 60 })),
+  // Core
+  plancha: FG({ hip: [96, 106], torso: 178, head: 175, thigh: -2, shin: 0, foot: 90, arm: 90, fore: 0, ground: 132 }, { hip: [96, 106], torso: 178, head: 175, thigh: -2, shin: 0, foot: 90, arm: 90, fore: 0, ground: 132 }),
+  plancha_lateral: FG({ hip: [96, 108], torso: 180, head: 180, thigh: 0, shin: 0, foot: 90, arm: 90, fore: 0, arm2: -110, fore2: -110, ground: 132 }, { hip: [96, 100], torso: 178, head: 175, thigh: 0, shin: 0, foot: 90, arm: 90, fore: 0, arm2: -95, fore2: -95, ground: 132 }),
+  crunch_declinado: FG(dec({ arm: -120, fore: 160, equip: null, thigh: 200, shin: 110, foot: 80 }), dec({ torso: -40, head: -45, arm: -130, fore: 180, thigh: 200, shin: 110, foot: 80 })),
+  elevacion_piernas_banco: FG(sup({ hip: [90, 92], thigh: 0, shin: 0, foot: 60, arm: 165, fore: 170, bench: { x: 30, y: 96, w: 120 } }), sup({ hip: [90, 92], thigh: -80, shin: -80, foot: 0, arm: 165, fore: 170, bench: { x: 30, y: 96, w: 120 } })),
+  paseo_granjero: FG(st({ equip: "db1", arm: 92, fore: 92, thigh: 70, shin: 95, thigh2: 110, shin2: 90 }), st({ equip: "db1", arm: 92, fore: 92, thigh: 110, shin: 90, thigh2: 70, shin2: 95 })),
+  russian_twist: FG({ hip: [96, 110], torso: -120, head: -110, thigh: -20, shin: 40, foot: 0, arm: -20, fore: -20, equip: "plate", ground: 132 }, { hip: [96, 110], torso: -120, head: -110, thigh: -20, shin: 40, foot: 0, arm: -70, fore: -80, equip: "plate", ground: 132 }),
+  dead_bug: FG({ hip: [96, 122], torso: 180, head: 180, thigh: -90, shin: 0, foot: 60, arm: -90, fore: -90, ground: 132 }, { hip: [96, 122], torso: 180, head: 180, thigh: -20, shin: -10, foot: 60, arm: 170, fore: 170, ground: 132 }),
+};
+
+function ExerciseFigure({ exercise, frame, size = 120, muted }) {
+  const fig = EXERCISE_FIGURES[exercise.id] || EXERCISE_FIGURES[exercise.figureOf] || null;
+  if (!fig) return <svg viewBox="0 0 200 150" width={size} height={size * 0.75} aria-hidden="true"><rect x={20} y={20} width={160} height={110} rx={12} fill="var(--e-card2)" /><text x={100} y={80} textAnchor="middle" fill="var(--e-text2)" fontSize={14}>sin ilustración</text></svg>;
+  const f = frame ?? fig.thumb;
+  return <Figure pose={fig.frames[f]} size={size} muted={muted} />;
+}
+
+// Animación inicio → fin en la ficha (respeta prefers-reduced-motion).
+function AnimatedFigure({ exercise, size = 220 }) {
+  const [f, setF] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const i = setInterval(() => setF((x) => 1 - x), 1400);
+    return () => clearInterval(i);
+  }, []);
+  return (
+    <div className="e-col" style={{ alignItems: "center", gap: 4 }}>
+      <ExerciseFigure exercise={exercise} frame={f} size={size} />
+      <div className="e-row" style={{ gap: 6 }}>{[0, 1].map((i) => <button key={i} className={`e-chip ${f === i ? "on" : ""}`} style={{ height: 26, padding: "0 10px" }} onClick={() => setF(i)}>{i === 0 ? "inicio" : "final"}</button>)}</div>
+    </div>
+  );
+}
+
+/* Silueta con músculos resaltados (vista frontal y posterior) */
+const MUSCLE_SHAPES = {
+  front: {
+    pecho: [<rect key="p1" x={30} y={44} width={19} height={16} rx={6} />, <rect key="p2" x={51} y={44} width={19} height={16} rx={6} />],
+    hombro: [<circle key="h1" cx={26} cy={46} r={7} />, <circle key="h2" cx={74} cy={46} r={7} />],
+    "bíceps": [<rect key="b1" x={17} y={54} width={9} height={22} rx={4} />, <rect key="b2" x={74} y={54} width={9} height={22} rx={4} />],
+    core: [<rect key="c" x={38} y={62} width={24} height={30} rx={6} />],
+    "cuádriceps": [<rect key="q1" x={31} y={100} width={16} height={40} rx={7} />, <rect key="q2" x={53} y={100} width={16} height={40} rx={7} />],
+  },
+  back: {
+    espalda: [<path key="e" d="M28 42 L72 42 L62 92 L38 92 Z" />],
+    hombro: [<circle key="h1" cx={26} cy={46} r={7} />, <circle key="h2" cx={74} cy={46} r={7} />],
+    "tríceps": [<rect key="t1" x={17} y={54} width={9} height={22} rx={4} />, <rect key="t2" x={74} y={54} width={9} height={22} rx={4} />],
+    "glúteo": [<rect key="g1" x={32} y={92} width={17} height={16} rx={7} />, <rect key="g2" x={51} y={92} width={17} height={16} rx={7} />],
+    isquios: [<rect key="i1" x={31} y={110} width={16} height={32} rx={7} />, <rect key="i2" x={53} y={110} width={16} height={32} rx={7} />],
+    gemelo: [<rect key="c1" x={33} y={150} width={12} height={26} rx={6} />, <rect key="c2" x={55} y={150} width={12} height={26} rx={6} />],
+  },
+};
+function Silhouette({ view, primary, secondary = [] }) {
+  const shapes = MUSCLE_SHAPES[view];
+  return (
+    <svg viewBox="0 0 100 200" width={64} height={128} aria-hidden="true">
+      <g fill="var(--e-card2)">
+        <circle cx={50} cy={20} r={11} /><rect x={45} y={30} width={10} height={8} />
+        <path d="M27 40 Q50 34 73 40 L70 96 L30 96 Z" />
+        <rect x={15} y={40} width={12} height={62} rx={6} /><rect x={73} y={40} width={12} height={62} rx={6} />
+        <rect x={30} y={96} width={18} height={92} rx={8} /><rect x={52} y={96} width={18} height={92} rx={8} />
+      </g>
+      {Object.entries(shapes).map(([m, els]) => {
+        const kind = m === primary ? "p" : secondary.includes(m) ? "s" : null;
+        if (!kind) return null;
+        return <g key={m} fill="var(--e-acc)" opacity={kind === "p" ? 1 : 0.4}>{els}</g>;
+      })}
+      <text x={50} y={196} textAnchor="middle" fontSize={11} fill="var(--e-text2)">{view === "front" ? "frente" : "espalda"}</text>
+    </svg>
+  );
+}
+const MuscleMap = ({ exercise }) => (
+  <div className="e-row" style={{ gap: 4, justifyContent: "center" }}>
+    <Silhouette view="front" primary={exercise.muscle} secondary={exercise.secondary || []} />
+    <Silhouette view="back" primary={exercise.muscle} secondary={exercise.secondary || []} />
+  </div>
+);
+
+/* =============================================================================
  * DATOS DE EJEMPLO Y VALORES POR DEFECTO
  * Solo material disponible: banco inclinable, barra olímpica, dos barras de
  * mancuerna, discos (10×4, 5×4, 1,5×4), kettlebell de 10 kg y peso corporal.
@@ -443,6 +688,7 @@ const SEED_EXERCISES = [
   EX("aperturas", "Aperturas con mancuernas", "pecho", [], "pair", { bench: true, rest: 75 }, "Codos ligeramente flexionados y fijos. Estira sin perder tensión; no bajes más de la línea del hombro."),
   EX("flexiones", "Flexiones", "pecho", ["tríceps", "core"], "bodyweight", { rest: 75 }, "Cuerpo en línea, manos algo más abiertas que los hombros. Pecho al suelo. Lastre: disco sobre la espalda alta o pies en el banco."),
   EX("flexiones_declinadas", "Flexiones con pies en banco", "pecho", ["hombro", "tríceps"], "bodyweight", { bench: true, rest: 75 }, "Pies sobre el banco. Más énfasis en pectoral superior y hombro. Mantén la cadera alineada."),
+  EX("press_suelo", "Press de suelo con barra", "pecho", ["tríceps"], "barbell", { rest: 150 }, "Tumbado en el suelo, codos apoyan al bajar. Sin ayudante es la variante segura con barra: si fallas, la dejas caer al suelo. Pausa 1 s con los codos en el suelo."),
   EX("pullover", "Pullover con mancuerna", "pecho", ["espalda"], "single", { bench: true, rest: 90 }, "Tumbado transversal en el banco, cadera baja. Mancuerna con ambas manos, codos casi fijos, estira por detrás de la cabeza."),
   // Espalda
   EX("remo_barra", "Remo con barra", "espalda", ["bíceps"], "barbell", { rest: 120 }, "Bisagra de cadera a unos 45°, espalda neutra. Tira hacia el ombligo llevando los codos atrás. Sin balanceo."),
@@ -477,6 +723,8 @@ const SEED_EXERCISES = [
   EX("sentadilla_frontal", "Sentadilla frontal con barra", "cuádriceps", ["glúteo", "core"], "barbell", { lower: true, rest: 180 }, "Sin rack: limpia la barra a los hombros. Codos altos, torso vertical, baja todo lo que la movilidad permita. Sube la dificultad con tempo 3-1-1 o pausa abajo antes que con kilos."),
   EX("sentadilla_trasera", "Sentadilla trasera con barra", "cuádriceps", ["glúteo", "isquios"], "barbell", { lower: true, rest: 180 }, "Sin rack hay que pasar la barra por encima de la cabeza (limpia + press tras nuca), así que la carga útil está limitada por lo que puedas presionar. Usa esta variante con cargas moderadas y tempo."),
   EX("sentadilla_goblet", "Sentadilla goblet", "cuádriceps", ["glúteo", "core"], "kettlebell", { lower: true, rest: 120 }, "Kettlebell pegada al pecho, codos entre las rodillas al bajar. Ideal para calentar y para series de 15-20 con pausa abajo."),
+  EX("sentadilla_banco", "Sentadilla al banco", "cuádriceps", ["glúteo"], "kettlebell", { bench: true, lower: true, rest: 120 }, "Siéntate y levántate del banco sin rebotar, con kettlebell al pecho. Controla la bajada en 3 s. Variante amable con la rodilla: el banco limita la profundidad y la carga."),
+  EX("sentadilla_pared", "Sentadilla isométrica en pared", "cuádriceps", [], "bodyweight", { lower: true, rest: 90 }, "Espalda en la pared, rodillas a 90° o el ángulo que no duela. Registra segundos en repeticiones. Fortalece el cuádriceps sin recorrido articular."),
   EX("sentadilla_bulgara", "Sentadilla búlgara", "cuádriceps", ["glúteo"], "pair", { bench: true, uni: true, lower: true, rest: 120 }, "Pie trasero sobre el banco. Torso ligeramente inclinado, rodilla delantera sigue la punta del pie. Progresión de tren inferior de referencia con mancuernas."),
   EX("zancadas", "Zancadas con mancuernas", "cuádriceps", ["glúteo"], "pair", { uni: true, lower: true, rest: 120 }, "Paso largo, rodilla trasera cerca del suelo. Alterna o completa una pierna primero."),
   EX("zancada_inversa_barra", "Zancada inversa con barra", "cuádriceps", ["glúteo"], "barbell", { uni: true, lower: true, rest: 150 }, "Barra en la espalda (limpia y press tras nuca) o al frente. Paso atrás controlado, empuja con el talón delantero."),
@@ -580,11 +828,12 @@ const DEFAULT_SETTINGS = {
   key: "app",
   barbellKg: 20, dumbbellBarKg: 2, restDefaultSec: 90,
   activeRoutineId: "rt_torso_pierna",
+  activeProgramId: "pg_26", programGoals: true, programSkipped: [],
   profile: { heightCm: 173, daysPerWeek: 5, level: "intermedio", goal: "Pérdida de grasa" },
   goals: { kcal: 2200, protein: 190, carbs: 210, fat: 65, waterMl: 3000 },
   ha: {
     enabled: false,
-    scaleEntity: "", calendarEntity: "", todoEntity: "",
+    scaleEntity: "", stepsEntity: "", calendarEntity: "", todoEntity: "",
     notifyService: "", notifyOnRest: false,
     ttsService: "", ttsEntity: "", mediaPlayerEntity: "",
     sceneStart: "", sceneEnd: "",
@@ -977,6 +1226,163 @@ function beep() {
 }
 
 /* =============================================================================
+ * PROGRAMA DE 26 SEMANAS
+ * Lunes a viernes, 60 min, nivel intermedio, pérdida de grasa, rodilla sensible
+ * (pierna con poca carga y sin recorridos dolorosos), sin ayudante en press.
+ * ========================================================================== */
+const PB = (exerciseId, sets, repsMin, repsMax, restSec, note) => ({ exerciseId, sets, repsMin, repsMax, restSec, note: note || "" });
+// Modificadores por semana dentro de un bloque de 6: series extra en los ejercicios principales y RIR objetivo.
+const WEEK_MODS_6 = [
+  { sets: 0, rir: 3, label: "Aterrizaje" }, { sets: 0, rir: 2, label: "Ajuste" }, { sets: 0, rir: 2, label: "Carga" },
+  { sets: 1, rir: 1, label: "Carga +" }, { sets: 1, rir: 1, label: "Pico" }, { sets: -1, rir: 4, label: "Descarga", deload: true },
+];
+const SEED_PROGRAM = {
+  id: "pg_26", name: "Programa 26 semanas · pérdida de grasa", startDate: "2026-09-21", weeks: 26,
+  goals: { startKg: 116, targetKg: 80, milestoneKg: 96, stepsPerDay: 10000, sessionMinutes: 60 },
+  rules: [
+    "Rodilla: nada de dolor durante la serie. Recorrido solo hasta donde no moleste, bajada en 3 s y sin rebotes. La pierna progresa por tempo, pausas y unilateral, no por kilos.",
+    "Sin ayudante: el press pesado se hace con mancuernas o en el suelo con barra. En press de banca con barra nunca menos de 2 RIR.",
+    "Progresión doble: cuando todas las series lleguen al tope de repeticiones con el RIR objetivo, sube al siguiente peso montable (3 kg). Si el salto es mayor, añade repeticiones o una serie.",
+    "Descarga en la sexta semana de cada bloque: una serie menos, RIR 4 y un 10 % menos de carga.",
+    "10.000 pasos diarios todos los días, entrenes o no. Es la mitad del resultado.",
+  ],
+  nutrition: [
+    { weeks: [1, 8], label: "Déficit 1", kcal: 2200, protein: 195, carbs: 210, fat: 65 },
+    { weeks: [9, 10], label: "Mantenimiento", kcal: 2700, protein: 190, carbs: 300, fat: 80 },
+    { weeks: [11, 18], label: "Déficit 2", kcal: 2100, protein: 195, carbs: 190, fat: 62 },
+    { weeks: [19, 20], label: "Mantenimiento", kcal: 2600, protein: 190, carbs: 285, fat: 78 },
+    { weeks: [21, 26], label: "Déficit 3", kcal: 2000, protein: 190, carbs: 175, fat: 60 },
+  ],
+  blocks: [
+    {
+      id: "b1", name: "Base y técnica", weeks: [1, 6], color: "#4F8CFF", mods: WEEK_MODS_6,
+      params: "3 series · 10–15 reps · RIR 3→1 · pierna a tempo 3-1-1 · descanso 90 s",
+      focus: "Aprender el patrón de cada ejercicio con tu material, acostumbrar la rodilla a cargas suaves y construir el hábito de cinco días.",
+      days: [
+        { name: "Torso A", focus: "empuje y tracción horizontal", blocks: [PB("press_mancuernas", 3, 10, 12, 90), PB("remo_apoyado", 3, 10, 12, 90), PB("press_hombro_mancuernas", 3, 10, 12, 90), PB("remo_mancuerna", 3, 10, 12, 75), PB("curl_alterno", 2, 12, 15, 60), PB("press_frances", 2, 12, 15, 60), PB("plancha", 2, 30, 45, 45, "segundos")] },
+        { name: "Pierna A", focus: "cadera y rodilla amable", blocks: [PB("sentadilla_banco", 3, 10, 12, 120, "tempo 3-1-1, banco alto"), PB("rdl_mancuernas", 3, 10, 12, 120), PB("hip_thrust", 3, 12, 15, 90), PB("step_up", 2, 10, 12, 90, "banco bajo o escalón"), PB("gemelo_pie", 3, 15, 20, 60), PB("sentadilla_pared", 2, 30, 45, 60, "segundos, ángulo sin dolor")] },
+        { name: "Torso B", focus: "hombro y espalda alta", blocks: [PB("press_suelo", 3, 8, 12, 120), PB("remo_barra", 3, 10, 12, 90), PB("press_inclinado_mancuernas", 3, 10, 12, 90), PB("pajaros", 3, 12, 15, 60), PB("elevaciones_laterales", 3, 15, 20, 60), PB("curl_martillo", 2, 12, 15, 60), PB("fondos_banco", 2, 10, 15, 60, "pies en el suelo")] },
+        { name: "Pierna B", focus: "bisagra y unilateral", blocks: [PB("peso_muerto_rumano", 3, 10, 12, 120, "tempo 3-1-1"), PB("puente_gluteo_una_pierna", 3, 12, 15, 60), PB("sentadilla_goblet", 3, 12, 15, 90, "solo rango sin dolor"), PB("pm_una_pierna", 2, 10, 12, 75), PB("gemelo_una_pierna", 3, 12, 15, 60), PB("dead_bug", 2, 10, 12, 45)] },
+        { name: "Cuerpo completo", focus: "acondicionamiento", blocks: [PB("swing_kb", 4, 15, 20, 60), PB("flexiones", 3, 10, 15, 60), PB("remo_kettlebell", 3, 12, 15, 60), PB("sentadilla_mancuernas", 3, 12, 15, 90, "ligera, tempo 3-1-1"), PB("paseo_granjero", 3, 30, 40, 75, "metros"), PB("russian_twist", 3, 15, 20, 45)] },
+      ],
+    },
+    {
+      id: "b2", name: "Acumulación", weeks: [7, 12], color: "#1F9E8B", mods: WEEK_MODS_6,
+      params: "3–4 series · 8–12 reps · RIR 2→1 · descanso 90–120 s",
+      focus: "Más volumen en torso con los básicos que puedes hacer seguro. En pierna, más series con la misma carga y pausas.",
+      days: [
+        { name: "Torso A", focus: "básicos de empuje y tracción", blocks: [PB("press_mancuernas", 4, 8, 12, 120), PB("remo_barra", 4, 8, 12, 120), PB("press_militar", 3, 8, 10, 120, "carga moderada, limpia la barra"), PB("remo_mancuerna", 3, 10, 12, 75), PB("curl_barra", 3, 10, 12, 60), PB("extension_triceps_mancuerna", 3, 10, 12, 60)] },
+        { name: "Pierna A", focus: "cadera dominante", blocks: [PB("sentadilla_banco", 4, 10, 12, 120, "pausa 1 s en el banco"), PB("hip_thrust", 4, 10, 12, 90, "pausa 2 s arriba"), PB("rdl_mancuernas", 3, 10, 12, 120), PB("step_up", 3, 10, 12, 90), PB("gemelo_pie", 4, 12, 15, 60), PB("elevacion_piernas_banco", 3, 10, 15, 45)] },
+        { name: "Torso B", focus: "hombro y espalda alta", blocks: [PB("press_suelo", 4, 6, 10, 150), PB("remo_apoyado", 4, 10, 12, 90), PB("press_inclinado_mancuernas", 3, 8, 12, 90), PB("pajaros", 3, 12, 15, 60), PB("elevaciones_laterales", 4, 12, 20, 60), PB("curl_inclinado", 3, 10, 12, 60)] },
+        { name: "Pierna B", focus: "bisagra pesada y unilateral", blocks: [PB("peso_muerto", 3, 6, 8, 180, "carga moderada, espalda neutra"), PB("puente_gluteo_una_pierna", 3, 12, 15, 60), PB("sentadilla_goblet", 3, 12, 15, 90, "rango sin dolor"), PB("pm_una_pierna", 3, 10, 12, 75), PB("curl_nordico", 2, 4, 6, 120, "asistido con manos"), PB("gemelo_una_pierna", 3, 12, 15, 60)] },
+        { name: "Cuerpo completo", focus: "acondicionamiento", blocks: [PB("swing_kb", 5, 15, 20, 60), PB("flexiones_declinadas", 3, 8, 12, 60), PB("remo_kettlebell", 3, 12, 15, 60), PB("sentadilla_mancuernas", 3, 12, 15, 90, "ligera"), PB("paseo_granjero", 4, 30, 40, 75, "metros"), PB("plancha_lateral", 3, 30, 40, 45, "segundos por lado")] },
+      ],
+    },
+    {
+      id: "b3", name: "Intensificación", weeks: [13, 18], color: "#8A5FE6", mods: WEEK_MODS_6,
+      params: "4 series · 6–10 reps en torso · pierna 8–12 con pausas · RIR 2→1 · descanso 120–150 s",
+      focus: "Cargas más altas en torso. La pierna sigue con poca carga pero más difícil: pausas de 2 s, tempo lento y más lastre en unilateral.",
+      days: [
+        { name: "Torso A", focus: "fuerza de empuje y tracción", blocks: [PB("press_mancuernas", 4, 6, 10, 150), PB("remo_barra", 4, 6, 8, 150), PB("press_hombro_mancuernas", 4, 6, 10, 120), PB("remo_mancuerna", 3, 8, 10, 90), PB("curl_barra", 3, 8, 10, 60), PB("press_frances", 3, 8, 10, 60)] },
+        { name: "Pierna A", focus: "pausas y tempo", blocks: [PB("sentadilla_banco", 4, 10, 12, 120, "pausa 2 s, banco más bajo si no duele"), PB("hip_thrust", 4, 8, 10, 120, "pausa 2 s arriba"), PB("rdl_mancuernas", 4, 8, 10, 120), PB("step_up", 3, 8, 10, 90), PB("gemelo_pie", 4, 10, 12, 60), PB("sentadilla_pared", 3, 45, 60, 60, "segundos")] },
+        { name: "Torso B", focus: "hombro y espalda alta", blocks: [PB("press_suelo", 4, 5, 8, 150), PB("remo_apoyado", 4, 8, 10, 90), PB("press_inclinado_mancuernas", 4, 6, 10, 120), PB("remo_menton", 3, 10, 12, 60), PB("elevaciones_laterales", 4, 12, 15, 60), PB("curl_martillo", 3, 8, 10, 60), PB("extension_triceps_mancuerna", 3, 8, 10, 60)] },
+        { name: "Pierna B", focus: "bisagra fuerte", blocks: [PB("peso_muerto_rumano", 4, 6, 8, 150), PB("puente_gluteo_una_pierna", 3, 10, 12, 60, "con disco"), PB("sentadilla_goblet", 3, 10, 12, 90, "tempo 3-1-1"), PB("pm_una_pierna", 3, 8, 10, 75), PB("curl_nordico", 3, 4, 6, 120), PB("gemelo_una_pierna", 3, 10, 12, 60)] },
+        { name: "Cuerpo completo", focus: "densidad", blocks: [PB("swing_kb", 5, 20, 20, 60), PB("flexiones", 4, 10, 20, 60, "máximas con 1 RIR"), PB("remo_kettlebell", 4, 10, 12, 60), PB("sentadilla_mancuernas", 3, 10, 12, 90), PB("paseo_granjero", 4, 40, 40, 75, "metros"), PB("crunch_declinado", 3, 12, 15, 45)] },
+      ],
+    },
+    {
+      id: "b4", name: "Consolidación y densidad", weeks: [19, 24], color: "#C9731F", mods: WEEK_MODS_6,
+      params: "3–4 series · 8–12 reps · descansos de 60–75 s · unilateral · RIR 2→1",
+      focus: "Mismo trabajo en menos tiempo: descansos cortos, más ejercicios a una mano y una pierna. Máximo gasto calórico sin castigar la rodilla.",
+      days: [
+        { name: "Torso A", focus: "unilateral y densidad", blocks: [PB("press_inclinado_mancuernas", 4, 8, 12, 75), PB("remo_mancuerna", 4, 8, 12, 60), PB("press_arnold", 3, 10, 12, 75), PB("remo_apoyado", 3, 10, 12, 60), PB("curl_concentrado", 3, 10, 12, 45), PB("patada_triceps", 3, 12, 15, 45)] },
+        { name: "Pierna A", focus: "cadera y unilateral", blocks: [PB("sentadilla_banco", 4, 12, 15, 90, "banco más bajo si va bien"), PB("hip_thrust", 4, 10, 12, 75), PB("pm_una_pierna", 3, 10, 12, 60), PB("step_up", 3, 10, 12, 60), PB("gemelo_pie", 4, 12, 15, 45), PB("dead_bug", 3, 10, 12, 45)] },
+        { name: "Torso B", focus: "empuje pesado seguro", blocks: [PB("press_suelo", 4, 6, 8, 120), PB("remo_barra", 4, 8, 10, 90), PB("press_mancuernas", 3, 10, 12, 75), PB("pajaros", 4, 12, 15, 45), PB("elevaciones_frontales_disco", 3, 12, 15, 45), PB("curl_alterno", 3, 10, 12, 45), PB("fondos_banco", 3, 10, 15, 60)] },
+        { name: "Pierna B", focus: "bisagra pesada", blocks: [PB("peso_muerto", 4, 5, 6, 180, "moderado, técnica perfecta"), PB("puente_gluteo_una_pierna", 3, 12, 15, 60), PB("sentadilla_goblet", 3, 12, 15, 75), PB("buenos_dias", 3, 10, 12, 90, "ligero"), PB("curl_nordico", 3, 5, 6, 120), PB("gemelo_una_pierna", 3, 12, 15, 45)] },
+        { name: "Cuerpo completo", focus: "circuito", blocks: [PB("swing_kb", 6, 20, 20, 45), PB("flexiones_declinadas", 4, 8, 12, 45), PB("remo_kettlebell", 4, 12, 15, 45), PB("paseo_granjero", 5, 40, 40, 60, "metros"), PB("plancha", 3, 45, 60, 45, "segundos"), PB("russian_twist", 3, 20, 20, 45)] },
+      ],
+    },
+    {
+      id: "b5", name: "Cierre y test", weeks: [25, 26], color: "#D4406A",
+      mods: [{ sets: 0, rir: 1, label: "Semana de test" }, { sets: -1, rir: 4, label: "Descarga final", deload: true }],
+      params: "Semana 25: máximas repeticiones con 1 RIR en los principales · Semana 26: descarga y medición",
+      focus: "Comprobar cuánto has mejorado respecto a la semana 1 y cerrar el ciclo descansado para empezar el siguiente.",
+      days: [
+        { name: "Test torso A", focus: "records de repeticiones", blocks: [PB("press_mancuernas", 3, 8, 12, 150, "última serie a 1 RIR"), PB("remo_barra", 3, 8, 12, 150, "última serie a 1 RIR"), PB("press_hombro_mancuernas", 3, 8, 12, 120), PB("remo_mancuerna", 3, 10, 12, 90), PB("curl_barra", 2, 10, 12, 60), PB("press_frances", 2, 10, 12, 60)] },
+        { name: "Pierna suave", focus: "movilidad y control", blocks: [PB("sentadilla_banco", 3, 12, 15, 90), PB("hip_thrust", 3, 12, 15, 90), PB("rdl_mancuernas", 3, 10, 12, 90), PB("gemelo_pie", 3, 15, 20, 45), PB("sentadilla_pared", 2, 45, 60, 60, "segundos")] },
+        { name: "Test torso B", focus: "records de repeticiones", blocks: [PB("press_suelo", 3, 6, 10, 150, "última serie a 1 RIR"), PB("remo_apoyado", 3, 10, 12, 90), PB("press_inclinado_mancuernas", 3, 8, 12, 120), PB("elevaciones_laterales", 3, 15, 20, 45), PB("curl_martillo", 2, 10, 12, 60), PB("fondos_banco", 2, 10, 15, 60)] },
+        { name: "Pierna suave", focus: "bisagra ligera", blocks: [PB("peso_muerto_rumano", 3, 10, 12, 120), PB("puente_gluteo_una_pierna", 3, 12, 15, 60), PB("pm_una_pierna", 2, 10, 12, 60), PB("gemelo_una_pierna", 3, 12, 15, 45), PB("dead_bug", 2, 10, 12, 45)] },
+        { name: "Cuerpo completo", focus: "cierre", blocks: [PB("swing_kb", 4, 20, 20, 60), PB("flexiones", 3, 10, 20, 60, "máximas con 1 RIR"), PB("remo_kettlebell", 3, 12, 15, 60), PB("paseo_granjero", 3, 40, 40, 75, "metros"), PB("plancha", 2, 45, 60, 45, "segundos")] },
+      ],
+    },
+  ],
+};
+
+// Semana del programa (1..weeks) para una fecha; 0 antes de empezar, weeks+1 al terminar.
+function programWeekOf(program, dateISO) {
+  const days = Math.floor((parseISO(dateISO) - parseISO(program.startDate)) / 86400e3);
+  if (days < 0) return 0;
+  return Math.min(program.weeks + 1, Math.floor(days / 7) + 1);
+}
+const programBlockOf = (program, week) => program.blocks.find((b) => week >= b.weeks[0] && week <= b.weeks[1]) || null;
+const programNutritionOf = (program, week) => program.nutrition.find((n) => week >= n.weeks[0] && week <= n.weeks[1]) || null;
+const programDateOf = (program, week, day) => addDays(program.startDate, (week - 1) * 7 + day);
+
+// Plan concreto de una semana: bloque, modificador y días con series/RIR ajustados.
+function programPlanFor(program, week) {
+  const block = programBlockOf(program, week);
+  if (!block) return null;
+  const wib = week - block.weeks[0];
+  const mod = block.mods[Math.min(wib, block.mods.length - 1)];
+  const days = block.days.map((d) => ({
+    ...d,
+    blocks: d.blocks.map((b, i) => ({ ...b, sets: Math.max(1, b.sets + (i < 4 ? mod.sets : 0)), rir: mod.rir })),
+  }));
+  return { week, block, weekInBlock: wib + 1, mod, days, nutrition: programNutritionOf(program, week) };
+}
+
+// Estado de cada sesión del programa según las sesiones cerradas y las saltadas.
+function programStatus(program, sessions, skipped = [], todayStr = todayISO()) {
+  const done = new Map();
+  for (const s of sessions) if (s.finishedAt && s.programId === program.id && s.programWeek) done.set(`${s.programWeek}-${s.programDay}`, s);
+  const skip = new Set(skipped);
+  const list = [];
+  for (let w = 1; w <= program.weeks; w++) {
+    const block = programBlockOf(program, w);
+    if (!block) continue;
+    for (let d = 0; d < block.days.length; d++) {
+      const key = `${w}-${d}`, date = programDateOf(program, w, d);
+      const state = done.has(key) ? "done" : skip.has(key) ? "skipped" : date < todayStr ? "missed" : date === todayStr ? "today" : "pending";
+      list.push({ key, week: w, day: d, date, state, session: done.get(key) || null, name: block.days[d].name, block });
+    }
+  }
+  const next = list.find((x) => x.state === "missed" || x.state === "today" || x.state === "pending") || null;
+  const behind = list.filter((x) => x.state === "missed").length;
+  const doneCount = list.filter((x) => x.state === "done").length;
+  return { list, next, behind, doneCount, total: list.length };
+}
+
+// Sesión de entreno a partir de un día del programa.
+function buildProgramSession(program, week, dayIndex, data) {
+  const plan = programPlanFor(program, week);
+  const day = plan.days[dayIndex];
+  return {
+    id: uid(), date: todayISO(), routineId: null, dayIndex, dayName: day.name,
+    programId: program.id, programWeek: week, programDay: dayIndex, blockName: plan.block.name,
+    startedAt: new Date().toISOString(), finishedAt: null, note: "",
+    mounted: { barbell: null, dumbbells: null },
+    exercises: day.blocks.map((b) => {
+      const last = lastSessionFor(data.sessions, b.exerciseId);
+      const lastSets = last ? doneSets(last.ex) : [];
+      return {
+        exerciseId: b.exerciseId, restSec: b.restSec, repsMin: b.repsMin, repsMax: b.repsMax, rirTarget: b.rir, planNote: b.note,
+        sets: Array.from({ length: b.sets }, (_, i) => ({ kg: lastSets[i]?.kg ?? lastSets[lastSets.length - 1]?.kg ?? null, reps: "", rir: "", done: false, pr: false })),
+      };
+    }),
+  };
+}
+
+/* =============================================================================
  * ESTADO GLOBAL · almacén en memoria con escritura directa a `db`
  * ========================================================================== */
 const StoreCtx = createContext(null);
@@ -988,7 +1394,7 @@ function buildSeed() {
   return {
     settings: [DEFAULT_SETTINGS], inventory: [DEFAULT_INVENTORY], exercises: SEED_EXERCISES,
     routines: SEED_ROUTINES, sessions: seedSessions(), foods: SEED_FOODS, recipes: SEED_RECIPES,
-    diary: seedDiary(), bodyweight: seedBodyweight(), haQueue: [],
+    diary: seedDiary(), bodyweight: seedBodyweight(), haQueue: [], programs: [SEED_PROGRAM],
   };
 }
 function normalize(raw) {
@@ -1002,6 +1408,7 @@ function normalize(raw) {
     exercises: raw.exercises || [], routines: raw.routines || [], sessions: raw.sessions || [],
     foods: raw.foods || [], recipes: raw.recipes || [], diary: raw.diary || [],
     bodyweight: raw.bodyweight || [], haQueue: raw.haQueue || [],
+    programs: raw.programs?.length ? raw.programs : [SEED_PROGRAM],
   };
 }
 
@@ -1017,7 +1424,9 @@ function StoreProvider({ children }) {
           raw = buildSeed();
           for (const [s, recs] of Object.entries(raw)) await db.putMany(s, recs);
         }
-        setData(normalize(raw));
+        const n = normalize(raw);
+        if (!raw.programs?.length) await db.putMany("programs", n.programs);
+        setData(n);
       } catch (e) { setError(e); }
     })();
   }, []);
@@ -1053,7 +1462,7 @@ function StoreProvider({ children }) {
         for (const s of Object.keys(STORES)) await db.clear(s);
         await db.putMany("settings", [n.settings]);
         await db.putMany("inventory", [n.inventory]);
-        for (const s of ["exercises", "routines", "sessions", "foods", "recipes", "diary", "bodyweight", "haQueue"]) await db.putMany(s, n[s]);
+        for (const s of ["exercises", "routines", "sessions", "foods", "recipes", "diary", "bodyweight", "haQueue", "programs"]) await db.putMany(s, n[s]);
         setData(n);
       },
       exportJSON: () => db.exportAll(),
@@ -1351,6 +1760,30 @@ function useExercisesById() {
 }
 const useActiveSession = () => { const { data } = useStore(); return data.sessions.find((s) => !s.finishedAt) || null; };
 
+function useProgram() {
+  const { data } = useStore();
+  const program = data.programs.find((p) => p.id === data.settings.activeProgramId) || data.programs[0] || null;
+  const skipped = data.settings.programSkipped || [];
+  return useMemo(() => {
+    if (!program) return null;
+    const t = todayISO();
+    const week = programWeekOf(program, t);
+    const status = programStatus(program, data.sessions, skipped, t);
+    const next = status.next;
+    const nextPlan = next ? programPlanFor(program, next.week) : null;
+    const plan = week >= 1 && week <= program.weeks ? programPlanFor(program, week) : null;
+    const daysToStart = week === 0 ? Math.ceil((parseISO(program.startDate) - parseISO(t)) / 86400e3) : 0;
+    return { program, week, plan, status, next, nextPlan, nextDay: nextPlan ? nextPlan.days[next.day] : null, nutrition: plan?.nutrition || null, daysToStart, finished: week > program.weeks || (!next && status.doneCount > 0) };
+  }, [program, data.sessions, skipped]);
+}
+// Objetivos diarios: fase de alimentación del programa (si está activa) o los de ajustes.
+function useGoals() {
+  const { data } = useStore();
+  const pg = useProgram();
+  if (data.settings.programGoals && pg?.nutrition) return { ...data.settings.goals, kcal: pg.nutrition.kcal, protein: pg.nutrition.protein, carbs: pg.nutrition.carbs, fat: pg.nutrition.fat, phase: pg.nutrition.label };
+  return data.settings.goals;
+}
+
 // Día previsto de la rutina activa: el siguiente al último entrenado.
 function plannedDay(data) {
   const routine = data.routines.find((r) => r.id === data.settings.activeRoutineId) || data.routines[0];
@@ -1392,6 +1825,7 @@ function ExercisePicker({ open, onClose, onPick, exclude = [] }) {
       <div className="e-list">
         {list.map((e) => (
           <button key={e.id} className="e-item" onClick={() => { onPick(e); onClose(); }}>
+            <span className="e-thumb sm"><ExerciseFigure exercise={e} size={52} /></span>
             <span className="e-grow e-stack"><span className="t">{e.name}</span><span className="s">{e.muscle} · {EQUIPMENT_LABEL[e.loadMode]}</span></span>
             <Plus style={{ width: 18, color: "var(--e-text2)" }} />
           </button>
@@ -1672,7 +2106,7 @@ function SessionView() {
 
   const onTimerDone = useCallback(() => { beep(); integration.notifyRestDone("Descanso terminado. Siguiente serie."); }, [integration]);
 
-  if (summary) return <SessionSummary summary={summary} onClose={() => { setSummary(null); nav.go("entreno", "routines"); }} />;
+  if (summary) return <SessionSummary summary={summary} onClose={() => { setSummary(null); nav.go("entreno", summary.session.programId ? "program" : "routines"); }} />;
   if (!session) return <div className="e-page"><Empty icon={Dumbbell}>No hay ninguna sesión en curso.<Btn variant="soft" onClick={() => nav.go("entreno", "routines")}>Ir a rutinas</Btn></Empty></div>;
 
   const update = (patch) => store.put("sessions", { ...session, ...patch });
@@ -1751,7 +2185,7 @@ function SessionView() {
     <div className="e-page">
       <RestTimer timer={timer} onChange={setTimer} onDone={onTimerDone} />
       <div className="e-header">
-        <div className="e-row"><IconBtn icon={ChevronLeft} label="Volver" onClick={() => nav.go("entreno", "routines")} /><div><h1>{session.dayName}</h1><div className="sub">{fmtSecs(elapsed)} · {sessionSetCount(session)} series · {fmtN(sessionTonnage(session, exById))} kg</div></div></div>
+        <div className="e-row"><IconBtn icon={ChevronLeft} label="Volver" onClick={() => nav.go("entreno", session.programId ? "program" : "routines")} /><div><h1>{session.programWeek ? `S${session.programWeek} · ` : ""}{session.dayName}</h1><div className="sub">{session.blockName ? `${session.blockName} · ` : ""}{fmtSecs(elapsed)} · {sessionSetCount(session)} series · {fmtN(sessionTonnage(session, exById))} kg</div></div></div>
         <Btn variant="primary" size="sm" icon={Check} onClick={() => setFinishing(true)}>Terminar</Btn>
       </div>
       <div className="e-chips">
@@ -1766,13 +2200,16 @@ function SessionView() {
         const lastSets = last ? doneSets(last.ex) : [];
         const loads = loadsFor(def, data.inventory, data.settings, session.mounted);
         const sug = suggestProgression({ exercise: def, block: { repsMax: ex.repsMax }, last, loads });
+        if (sug && ex.rirTarget >= 4) sug.text = "Semana de descarga: mantén el peso un 10 % por debajo del habitual y queda lejos del fallo.";
         return (
           <Card key={i} flush>
             <div className="e-col" style={{ padding: "14px 16px 0", gap: 6 }}>
               <div className="e-row between">
+                <span className="e-thumb"><ExerciseFigure exercise={def} size={64} /></span>
                 <div className="e-stack e-grow"><b style={{ fontSize: 17 }}>{def.name}</b><span className="e-muted">{def.muscle} · {mode.unit} · descanso {ex.restSec}s</span></div>
                 <IconBtn small icon={Trash2} label="Quitar ejercicio" onClick={() => update({ exercises: session.exercises.filter((_, j) => j !== i) })} />
               </div>
+              {ex.rirTarget != null && <div className="e-row wrap" style={{ gap: 6 }}><Chip kind="acc">Objetivo {ex.sets.length} × {ex.repsMin}–{ex.repsMax}</Chip><Chip>RIR {ex.rirTarget}</Chip>{ex.planNote && <span className="e-muted">{ex.planNote}</span>}</div>}
               {lastSets.length > 0 && <div className="e-muted"><Repeat style={{ width: 13, verticalAlign: -2 }} /> Última ({fmtDateShort(last.date)}): {lastSets.map((s) => `${num(s.kg) > 0 ? fmtKg(s.kg) + "×" : ""}${s.reps}`).join(" · ")}{lastSets.some((s) => s.rir !== "" && s.rir != null) ? ` · RIR ${Math.min(...lastSets.map((s) => num(s.rir, 9)))}` : ""}</div>}
               {sug && <div className="e-note acc" style={{ padding: "8px 10px" }}><Sparkles /><span>{sug.text}</span></div>}
             </div>
@@ -1848,7 +2285,7 @@ function SessionSummary({ summary, onClose }) {
   const { session, metrics, prs } = summary;
   return (
     <div className="e-page e-countup">
-      <div className="e-header"><div><h1>Sesión cerrada</h1><div className="sub">{session.dayName} · {fmtDate(session.date)}</div></div><IconBtn icon={X} label="Cerrar" onClick={onClose} /></div>
+      <div className="e-header"><div><h1>Sesión cerrada</h1><div className="sub">{session.programWeek ? `Semana ${session.programWeek} · ` : ""}{session.dayName} · {fmtDate(session.date)}</div></div><IconBtn icon={X} label="Cerrar" onClick={onClose} /></div>
       <Card accent>
         <span className="e-label">Tonelaje</span>
         <div className="e-hero"><span className="e-big"><CountUp value={session.tonnage} /></span><span className="e-unit">kg</span></div>
@@ -1927,6 +2364,12 @@ function ExerciseDetail({ exercise, onBack }) {
         {def.bench && <Chip>banco</Chip>}{def.unilateral && <Chip>unilateral</Chip>}{def.lower && <Chip>tren inferior</Chip>}
         <Chip icon={Timer}>{def.restSec} s</Chip>
       </div>
+      <Card>
+        <div className="e-row" style={{ justifyContent: "space-around", flexWrap: "wrap", gap: 16 }}>
+          <AnimatedFigure exercise={def} size={220} />
+          <MuscleMap exercise={def} />
+        </div>
+      </Card>
       <div className="e-grid2">
         <Card title="Mejor marca">
           {best ? (
@@ -1987,6 +2430,7 @@ function LibraryView() {
         <div className="e-list">
           {list.map((e) => { const b = bestFor(data.sessions, e.id); return (
             <button key={e.id} className="e-item" onClick={() => setSel(e)}>
+              <span className="e-thumb"><ExerciseFigure exercise={e} size={64} /></span>
               <span className="e-grow e-stack"><span className="t">{e.name}</span><span className="s">{e.muscle} · {EQUIPMENT_LABEL[e.loadMode]}</span></span>
               {b && <span className="v e-muted" style={{ fontSize: 13 }}>{b.kg > 0 ? `${fmtKg(b.e1rm)} kg` : `${b.reps} reps`}</span>}
               <ChevronRight style={{ width: 18, color: "var(--e-text2)" }} />
@@ -2050,15 +2494,174 @@ function CalendarView() {
   );
 }
 
+/* ---------- Programa de 26 semanas ---------- */
+function useStartProgramSession() {
+  const store = useStore();
+  const nav = useNav();
+  const toast = useToast();
+  const integration = useIntegration();
+  const active = useActiveSession();
+  return (program, week, day) => {
+    if (active) { toast("Ya hay una sesión en curso", "warn"); nav.go("entreno", "session"); return; }
+    store.put("sessions", buildProgramSession(program, week, day, store.data));
+    integration.onSessionStart();
+    nav.go("entreno", "session");
+  };
+}
+const BlockDot = ({ color, size = 10 }) => <span style={{ width: size, height: size, borderRadius: "50%", background: color, display: "inline-block", flex: "none" }} />;
+
+function ProgramHero({ pg, compact }) {
+  const { program, week, plan, status } = pg;
+  const t = todayISO();
+  const weekItems = status.list.filter((x) => x.week === (plan ? week : 1));
+  return (
+    <div className="e-col" style={{ gap: 12 }}>
+      <div className="e-row between wrap">
+        <div className="e-stack">
+          <span className="e-label">{week === 0 ? `Empieza el ${fmtDate(program.startDate)}` : pg.finished ? "Programa completado" : `Semana ${week} de ${program.weeks}`}</span>
+          <span className="e-row" style={{ gap: 8 }}><BlockDot color={(plan?.block || program.blocks[0]).color} size={12} /><b style={{ fontSize: compact ? 22 : 28, fontWeight: 600, lineHeight: 1.1 }}>{(plan?.block || program.blocks[0]).name}</b></span>
+          {plan && <span className="e-muted">Semana {plan.weekInBlock} de {plan.block.weeks[1] - plan.block.weeks[0] + 1} del bloque · {plan.mod.label} · RIR {plan.mod.rir}{plan.mod.deload ? " · descarga" : ""}</span>}
+        </div>
+        <div className="e-stack" style={{ alignItems: "flex-end" }}>
+          <span className="e-big sm">{status.doneCount}<span className="e-unit">/ {status.total}</span></span>
+          <span className="e-muted">sesiones hechas</span>
+        </div>
+      </div>
+      <div className="e-blockbar" aria-label="Progreso por bloques">
+        {Array.from({ length: program.weeks }, (_, i) => { const w = i + 1; const b = programBlockOf(program, w); return <i key={w} className={w < week ? "past" : w === week ? "now" : ""} style={{ background: b?.color }} title={`Semana ${w} · ${b?.name}`} />; })}
+      </div>
+      <div className="e-row between wrap">
+        <div className="e-daydots" aria-label="Días de esta semana">{weekItems.map((x) => <i key={x.key} className={x.state} title={`${x.name} · ${x.state}`} />)}</div>
+        <span className="e-row wrap" style={{ gap: 10 }}>{program.blocks.map((b) => <span key={b.id} className="e-row" style={{ gap: 4, fontSize: 11, color: "var(--e-text2)" }}><BlockDot color={b.color} size={8} />{b.name.split(" ")[0]}</span>)}</span>
+      </div>
+    </div>
+  );
+}
+
+function ProgramView() {
+  const store = useStore();
+  const { data } = store;
+  const toast = useToast();
+  const exById = useExercisesById();
+  const pg = useProgram();
+  const start = useStartProgramSession();
+  const active = useActiveSession();
+  const [showWeek, setShowWeek] = useState(null);
+  if (!pg) return <div className="e-page"><Empty icon={CalendarDays}>No hay programa activo.</Empty></div>;
+  const { program, week, plan, status, next, nextPlan, nextDay } = pg;
+  const shownWeek = showWeek ?? (plan ? week : next?.week || 1);
+  const shownPlan = programPlanFor(program, clamp(shownWeek, 1, program.weeks));
+  const skip = (key) => { store.setSettings({ programSkipped: [...(data.settings.programSkipped || []), key] }); toast("Sesión saltada. El programa sigue con la siguiente.", "info"); };
+  const startNow = () => { if (window.confirm("¿Adelantar el inicio del programa a esta semana? Las fechas de todas las semanas se mueven.")) store.put("programs", { ...program, startDate: weekStart(todayISO()) }); };
+  const t = todayISO();
+  return (
+    <div className="e-page">
+      <Card className="e-hero-card" accent><ProgramHero pg={pg} /></Card>
+
+      {week === 0 && (
+        <Card>
+          <div className="e-row between wrap"><div className="e-stack"><b style={{ fontSize: 17 }}>Faltan {pg.daysToStart} días</b><span className="e-muted">Empieza el {fmtDate(program.startDate, true)}. Puedes usar estos días para probar cargas con las rutinas libres.</span></div><Btn variant="soft" icon={Play} onClick={startNow}>Empezar esta semana</Btn></div>
+        </Card>
+      )}
+
+      {next && (
+        <Card title="Siguiente sesión">
+          <div className="e-row between wrap">
+            <div className="e-stack">
+              <span className="e-row" style={{ gap: 8 }}><BlockDot color={next.block.color} /><b style={{ fontSize: 22 }}>{nextDay.name}</b></span>
+              <span className="e-muted">Semana {next.week} · {nextDay.focus} · {nextDay.blocks.length} ejercicios · {sum(nextDay.blocks.map((b) => b.sets))} series · ~{program.goals.sessionMinutes} min</span>
+              {status.behind > 0 && <span className="e-chip warn" style={{ alignSelf: "flex-start" }}><AlertTriangle />{status.behind} sesión{status.behind > 1 ? "es" : ""} de retraso: se hacen en orden o se saltan</span>}
+            </div>
+            <div className="e-row">
+              {next.state === "missed" && <Btn variant="outline" size="sm" onClick={() => skip(next.key)}>Saltar</Btn>}
+              <Btn variant="primary" icon={Play} onClick={() => (active ? start() : start(program, next.week, next.day))}>{active ? "Continuar" : "Empezar"}</Btn>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <Card title="Cronología · 26 semanas">
+        <div className="e-timeline" role="img" aria-label="Estado de las 130 sesiones">
+          {Array.from({ length: program.weeks }, (_, i) => <span key={`w${i}`}>{(i + 1) % 5 === 0 || i === 0 ? i + 1 : ""}</span>)}
+          {[0, 1, 2, 3, 4].map((d) => Array.from({ length: program.weeks }, (_, i) => {
+            const it = status.list.find((x) => x.week === i + 1 && x.day === d);
+            const b = programBlockOf(program, i + 1);
+            return <i key={`${i}-${d}`} className={it?.state || ""} style={it && (it.state === "pending" || it.state === "today") ? { background: `color-mix(in srgb, ${b.color} 35%, var(--e-card2))` } : undefined} title={it ? `S${it.week} ${it.name} · ${it.date}` : ""} onClick={() => setShowWeek(i + 1)} />;
+          }))}
+        </div>
+        <div className="e-row wrap" style={{ gap: 12, fontSize: 12, color: "var(--e-text2)" }}>
+          <span className="e-row" style={{ gap: 4 }}><i style={{ width: 10, height: 10, borderRadius: 3, background: "var(--e-ok)" }} />hecha</span>
+          <span className="e-row" style={{ gap: 4 }}><i style={{ width: 10, height: 10, borderRadius: 3, background: "var(--e-err-soft)", boxShadow: "inset 0 0 0 1px var(--e-err)" }} />pendiente atrasada</span>
+          <span className="e-row" style={{ gap: 4 }}><i style={{ width: 10, height: 10, borderRadius: 3, background: "var(--e-div)" }} />saltada</span>
+          <span className="e-row" style={{ gap: 4 }}><i style={{ width: 10, height: 10, borderRadius: 3, boxShadow: "0 0 0 2px var(--e-acc)" }} />hoy</span>
+        </div>
+      </Card>
+
+      {shownPlan && (
+        <Card flush>
+          <div className="e-card-head" style={{ padding: "16px 16px 8px" }}>
+            <div className="e-row"><IconBtn small icon={ChevronLeft} label="Semana anterior" disabled={shownWeek <= 1} onClick={() => setShowWeek(Math.max(1, shownWeek - 1))} /><div className="e-stack" style={{ alignItems: "center" }}><h2 className="e-card-title big">Semana {shownWeek}{shownWeek === week ? " · esta semana" : ""}</h2><span className="e-muted"><BlockDot color={shownPlan.block.color} size={8} /> {shownPlan.block.name} · {shownPlan.mod.label} · RIR {shownPlan.mod.rir}</span></div><IconBtn small icon={ChevronRight} label="Semana siguiente" disabled={shownWeek >= program.weeks} onClick={() => setShowWeek(Math.min(program.weeks, shownWeek + 1))} /></div>
+          </div>
+          <div className="e-list">
+            {shownPlan.days.map((d, di) => {
+              const it = status.list.find((x) => x.week === shownWeek && x.day === di);
+              const stKind = it?.state === "done" ? "ok" : it?.state === "missed" ? "err" : it?.state === "today" ? "acc" : "";
+              const stLabel = it?.state === "done" ? "hecha" : it?.state === "missed" ? "atrasada" : it?.state === "today" ? "hoy" : it?.state === "skipped" ? "saltada" : DAYS_ES[di];
+              return (
+                <div key={di} className="e-col" style={{ padding: "12px 16px", gap: 8 }}>
+                  <div className="e-row between">
+                    <div className="e-stack"><b style={{ fontSize: 17 }}>{d.name}</b><span className="e-muted">{d.focus} · {fmtDateShort(it?.date || t)}</span></div>
+                    <div className="e-row"><Chip kind={stKind}>{stLabel}</Chip>{next && it && it.key === next.key && !active && <Btn size="xs" variant="primary" icon={Play} onClick={() => start(program, shownWeek, di)}>Empezar</Btn>}</div>
+                  </div>
+                  {d.blocks.map((b, i) => { const e = exById[b.exerciseId]; return (
+                    <div key={i} className="e-row" style={{ gap: 10 }}>
+                      <span className="e-thumb sm">{e && <ExerciseFigure exercise={e} size={52} />}</span>
+                      <span className="e-grow e-stack" style={{ gap: 1 }}><span style={{ fontWeight: 500 }}>{e?.name || b.exerciseId}</span>{b.note && <span className="e-muted" style={{ fontSize: 12 }}>{b.note}</span>}</span>
+                      <span className="e-stack" style={{ alignItems: "flex-end", gap: 2 }}><b>{b.sets} × {b.repsMin === b.repsMax ? b.repsMin : `${b.repsMin}–${b.repsMax}`}</b><span className="e-muted" style={{ fontSize: 12 }}>RIR {b.rir} · {b.restSec}s</span></span>
+                    </div>
+                  ); })}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      <Card title="Bloques">
+        {program.blocks.map((b) => (
+          <div key={b.id} className="e-col" style={{ gap: 4, padding: "10px 12px", borderRadius: 12, background: plan?.block.id === b.id ? `color-mix(in srgb, ${b.color} 14%, transparent)` : "var(--e-card2)" }}>
+            <div className="e-row between"><span className="e-row" style={{ gap: 8 }}><BlockDot color={b.color} /><b>{b.name}</b></span><span className="e-muted">semanas {b.weeks[0]}–{b.weeks[1]}</span></div>
+            <span style={{ fontSize: 13 }}>{b.focus}</span>
+            <span className="e-muted">{b.params}</span>
+          </div>
+        ))}
+      </Card>
+
+      <Card title="Alimentación por fases">
+        <table className="e-table"><thead><tr><th>Fase</th><th>Semanas</th><th className="r">kcal</th><th className="r">P / C / G</th></tr></thead><tbody>
+          {program.nutrition.map((n, i) => { const cur = plan?.nutrition === n; return <tr key={i} style={cur ? { color: "var(--e-acc)", fontWeight: 600 } : undefined}><td>{n.label}{cur ? " · ahora" : ""}</td><td>{n.weeks[0]}–{n.weeks[1]}</td><td className="r">{fmtN(n.kcal)}</td><td className="r">{n.protein} / {n.carbs} / {n.fat}</td></tr>; })}
+        </tbody></table>
+        <p className="e-muted">Objetivo final {program.goals.targetKg} kg. Hito realista a las 26 semanas: {program.goals.milestoneKg} kg (unos 0,8 kg por semana en déficit). Los 80 kg son un recorrido de unos 12 meses; el segundo ciclo empieza donde acabe este.</p>
+      </Card>
+
+      <Card title="Reglas del programa">
+        {program.rules.map((r, i) => <div key={i} className="e-note"><Info /><span>{r}</span></div>)}
+      </Card>
+    </div>
+  );
+}
+
 function TrainScreen() {
   const nav = useNav();
   const active = useActiveSession();
-  const view = nav.view || (active ? "session" : "routines");
-  const tabs = [{ value: "routines", label: "Rutinas" }, { value: "library", label: "Biblioteca" }, { value: "calendar", label: "Calendario" }];
+  const pg = useProgram();
+  const view = nav.view || (active ? "session" : pg ? "program" : "routines");
+  const tabs = [{ value: "program", label: "Programa" }, { value: "routines", label: "Rutinas" }, { value: "library", label: "Biblioteca" }, { value: "calendar", label: "Calendario" }];
   if (view === "session") return <SessionView />;
   return (
     <>
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "12px 16px 0" }}><Segmented options={tabs} value={view} onChange={(v) => nav.go("entreno", v)} /></div>
+      {view === "program" && <ProgramView />}
       {view === "routines" && <RoutinesView />}
       {view === "library" && <LibraryView />}
       {view === "calendar" && <CalendarView />}
@@ -2193,7 +2796,7 @@ function DiaryView() {
   const { rec, save } = useDiaryDay(date);
   const [adding, setAdding] = useState(null); // clave de comida
   const [editing, setEditing] = useState(null); // {meal, index}
-  const g = data.settings.goals;
+  const g = useGoals();
   const totals = dayTotals(rec, foodsById, recipesById);
   const left = g.kcal - totals.total.kcal;
 
@@ -2228,7 +2831,7 @@ function DiaryView() {
         <div className="e-rings">
           <Ring value={totals.total.kcal} max={g.kcal} size={112} stroke={10}><b>{fmtN(Math.abs(left))}</b><span>{left >= 0 ? "restantes" : "de más"}</span></Ring>
           <div className="e-grow e-col" style={{ gap: 10 }}>
-            <div className="e-stack"><span className="e-label">Consumidas</span><b style={{ fontSize: 17 }}>{fmtN(totals.total.kcal)} <span className="e-muted" style={{ fontWeight: 400 }}>/ {fmtN(g.kcal)} kcal</span></b></div>
+            <div className="e-stack"><span className="e-label">Consumidas{g.phase ? ` · ${g.phase}` : ""}</span><b style={{ fontSize: 17 }}>{fmtN(totals.total.kcal)} <span className="e-muted" style={{ fontWeight: 400 }}>/ {fmtN(g.kcal)} kcal</span></b></div>
             <MacroBar label="Proteína" value={totals.total.protein} max={g.protein} />
             <MacroBar label="Carbohidratos" value={totals.total.carbs} max={g.carbs} />
             <MacroBar label="Grasa" value={totals.total.fat} max={g.fat} />
@@ -2413,10 +3016,16 @@ function TodayScreen() {
   const { foodsById, recipesById } = useFoodMaps();
   const active = useActiveSession();
   const planned = plannedDay(data);
+  const pg = useProgram();
+  const startProgram = useStartProgramSession();
   const t = todayISO();
   const { rec: diary, save: saveDiary } = useDiaryDay(t);
-  const g = data.settings.goals;
+  const g = useGoals();
   const totals = dayTotals(diary, foodsById, recipesById).total;
+  const stepsEntity = data.settings.ha.enabled ? data.settings.ha.stepsEntity : "";
+  const stepsState = useHA([stepsEntity]).state(stepsEntity);
+  const steps = stepsState ? parseFloat(stepsState.state) : null;
+  const weekend = [5, 6].includes((parseISO(t).getDay() + 6) % 7);
   const { series, scale } = useWeightSeries();
   const last = series[series.length - 1];
   const trainedToday = data.sessions.filter((s) => s.finishedAt && s.date === t);
@@ -2436,9 +3045,27 @@ function TodayScreen() {
           <IconBtn icon={Settings} label="Ajustes" onClick={() => nav.go("ajustes")} />
         </div>
       </div>
-      <Card accent={!!(active || (planned && !trainedToday.length))}>
+      <Card accent={!!(active || (planned && !trainedToday.length))} className={pg ? "e-hero-card" : ""}>
         {active ? (
-          <div className="e-row between"><div className="e-stack"><span className="e-label">Sesión en curso</span><b style={{ fontSize: 22 }}>{active.dayName}</b><span className="e-muted">{sessionSetCount(active)} series hechas</span></div><Btn variant="primary" icon={Play} onClick={() => nav.go("entreno", "session")}>Continuar</Btn></div>
+          <div className="e-row between"><div className="e-stack"><span className="e-label">Sesión en curso</span><b style={{ fontSize: 22 }}>{active.programWeek ? `S${active.programWeek} · ` : ""}{active.dayName}</b><span className="e-muted">{sessionSetCount(active)} series hechas</span></div><Btn variant="primary" icon={Play} onClick={() => nav.go("entreno", "session")}>Continuar</Btn></div>
+        ) : pg && pg.week === 0 ? (
+          <div className="e-row between wrap"><div className="e-stack"><span className="e-label">Programa de 26 semanas</span><b style={{ fontSize: 22 }}>Empieza en {pg.daysToStart} día{pg.daysToStart === 1 ? "" : "s"}</b><span className="e-muted">{fmtDate(pg.program.startDate, true)} · {pg.program.blocks[0].name}</span></div><Btn variant="soft" icon={CalendarDays} onClick={() => nav.go("entreno", "program")}>Ver programa</Btn></div>
+        ) : pg && pg.next && !(trainedToday.length && !pg.status.behind) ? (
+          <div className="e-col">
+            <div className="e-row between wrap">
+              <div className="e-stack">
+                <span className="e-label e-row" style={{ gap: 6 }}><BlockDot color={pg.next.block.color} size={8} />Semana {pg.next.week} de {pg.program.weeks} · {pg.next.block.name}</span>
+                <b style={{ fontSize: 26, lineHeight: 1.1 }}>{pg.nextDay.name}</b>
+                <span className="e-muted">{pg.nextDay.blocks.length} ejercicios · {sum(pg.nextDay.blocks.map((b) => b.sets))} series · RIR {pg.nextPlan.mod.rir} · ~{pg.program.goals.sessionMinutes} min</span>
+              </div>
+              <Btn variant="primary" icon={Play} onClick={() => startProgram(pg.program, pg.next.week, pg.next.day)}>Empezar</Btn>
+            </div>
+            <div className="e-row wrap" style={{ gap: 6 }}>
+              {pg.status.behind > 0 ? <Chip kind="warn" icon={AlertTriangle}>{pg.status.behind} sesión{pg.status.behind > 1 ? "es" : ""} de retraso</Chip> : weekend ? <Chip icon={CalendarDays}>Fin de semana: descanso o adelantar</Chip> : <Chip kind="ok" icon={Check}>Al día con el programa</Chip>}
+              {pg.nextPlan.mod.deload && <Chip kind="acc">Semana de descarga</Chip>}
+              <button className="e-chip" onClick={() => nav.go("entreno", "program")}>Ver programa <ChevronRight /></button>
+            </div>
+          </div>
         ) : trainedToday.length ? (
           <div className="e-row between"><div className="e-stack"><span className="e-label">Entrenamiento de hoy</span><b style={{ fontSize: 22 }}>{trainedToday.map((s) => s.dayName).join(" + ")}</b><span className="e-muted">{fmtN(sum(trainedToday.map((s) => sessionTonnage(s, exById))))} kg · {sum(trainedToday.map(sessionSetCount))} series · hecho</span></div><span className="e-chip ok" style={{ height: 34 }}><Check /> Hecho</span></div>
         ) : planned ? (
@@ -2446,7 +3073,14 @@ function TodayScreen() {
         ) : <Empty icon={Dumbbell}>Crea una rutina en Entreno para ver aquí la sesión prevista.</Empty>}
       </Card>
       <div className="e-grid2">
-        <Card title="Semana"><WeekDots sessions={data.sessions} daysPerWeek={data.settings.profile.daysPerWeek || 5} /></Card>
+        <Card title="Semana">
+          <WeekDots sessions={data.sessions} daysPerWeek={data.settings.profile.daysPerWeek || 5} />
+          <div className="e-row between">
+            <span className="e-muted">Pasos de hoy</span>
+            {Number.isFinite(steps) ? <b>{fmtN(steps)} <span className="e-muted" style={{ fontWeight: 400 }}>/ {fmtN(pg?.program.goals.stepsPerDay || 10000)}</span></b> : <span className="e-muted">objetivo {fmtN(pg?.program.goals.stepsPerDay || 10000)}</span>}
+          </div>
+          {Number.isFinite(steps) && <div className="e-bar"><i style={{ width: `${clamp((steps / (pg?.program.goals.stepsPerDay || 10000)) * 100, 0, 100)}%`, background: steps >= (pg?.program.goals.stepsPerDay || 10000) ? "var(--e-ok)" : undefined }} /></div>}
+        </Card>
         <Card title="Peso corporal" action={<span className="e-muted">{last?.source === "ha" ? "báscula HA" : last ? "manual" : ""}</span>}>
           <div className="e-row between">
             <div className="e-stack">
@@ -2468,7 +3102,7 @@ function TodayScreen() {
           {scale.status === "error" && <Note kind="err" icon={AlertTriangle}>No se pudo leer {scale.entity}. Se usan los registros manuales.</Note>}
         </Card>
       </div>
-      <Card title="Alimentación" action={<Btn size="xs" variant="soft" onClick={() => nav.go("comida", "diary")}>Diario</Btn>}>
+      <Card title={g.phase ? `Alimentación · ${g.phase}` : "Alimentación"} action={<Btn size="xs" variant="soft" onClick={() => nav.go("comida", "diary")}>Diario</Btn>}>
         <div className="e-rings">
           <Ring value={totals.kcal} max={g.kcal} size={96} stroke={9}><b>{fmtN(Math.abs(g.kcal - totals.kcal))}</b><span>{g.kcal - totals.kcal >= 0 ? "kcal restan" : "kcal de más"}</span></Ring>
           <div className="e-grow e-col" style={{ gap: 8 }}>
@@ -2562,7 +3196,7 @@ function SettingsScreen() {
           <Field label="Rutina activa"><Select value={s.activeRoutineId} options={data.routines.map((r) => ({ value: r.id, label: r.name }))} onChange={(e) => store.setSettings({ activeRoutineId: e.target.value })} /></Field>
           <Field label="Descanso por defecto (s)"><Input type="number" inputMode="numeric" value={s.restDefaultSec} onChange={(e) => store.setSettings({ restDefaultSec: clamp(num(e.target.value, 90), 15, 600) })} /></Field>
         </div>
-        <div className="e-label">Objetivo diario</div>
+        <div className="e-label">Objetivo diario fijo{s.programGoals ? " (el programa manda mientras esté activo)" : ""}</div>
         <div className="e-fields">
           <Field label="kcal"><Input type="number" inputMode="numeric" value={s.goals.kcal} onChange={(e) => setGoal("kcal", e.target.value)} /></Field>
           <Field label="Proteína (g)"><Input type="number" inputMode="numeric" value={s.goals.protein} onChange={(e) => setGoal("protein", e.target.value)} /></Field>
@@ -2571,6 +3205,26 @@ function SettingsScreen() {
           <Field label="Agua (ml)"><Input type="number" inputMode="numeric" value={s.goals.waterMl} onChange={(e) => setGoal("waterMl", e.target.value)} /></Field>
         </div>
         <p className="e-muted">Macros: {fmtN(s.goals.protein * 4 + s.goals.carbs * 4 + s.goals.fat * 9)} kcal calculadas frente a {fmtN(s.goals.kcal)} de objetivo.</p>
+      </Card>
+
+      <Card title="Programa">
+        {data.programs.map((pr) => (
+          <div key={pr.id} className="e-col" style={{ gap: 10 }}>
+            <div className="e-row between"><b>{pr.name}</b><span className="e-muted">{pr.weeks} semanas</span></div>
+            <div className="e-fields">
+              <Field label="Fecha de inicio (lunes)"><Input type="date" value={pr.startDate} onChange={(e) => { const v = e.target.value; if (v) store.put("programs", { ...pr, startDate: weekStart(v) }); }} /></Field>
+              <Field label="Peso de partida (kg)"><Input type="number" inputMode="decimal" value={pr.goals.startKg ?? 116} onChange={(e) => store.put("programs", { ...pr, goals: { ...pr.goals, startKg: num(e.target.value, 116) } })} /></Field>
+              <Field label="Hito a 26 semanas (kg)"><Input type="number" inputMode="decimal" value={pr.goals.milestoneKg} onChange={(e) => store.put("programs", { ...pr, goals: { ...pr.goals, milestoneKg: num(e.target.value, 96) } })} /></Field>
+              <Field label="Objetivo final (kg)"><Input type="number" inputMode="decimal" value={pr.goals.targetKg} onChange={(e) => store.put("programs", { ...pr, goals: { ...pr.goals, targetKg: num(e.target.value, 80) } })} /></Field>
+              <Field label="Pasos al día"><Input type="number" inputMode="numeric" value={pr.goals.stepsPerDay} onChange={(e) => store.put("programs", { ...pr, goals: { ...pr.goals, stepsPerDay: num(e.target.value, 10000) } })} /></Field>
+            </div>
+          </div>
+        ))}
+        <Toggle id="pg-goals" label="Calorías y macros guiados por la fase del programa" hint="Si lo apagas, se usan los objetivos fijos de arriba" on={s.programGoals} onChange={(v) => store.setSettings({ programGoals: v })} />
+        <div className="e-row wrap">
+          <Btn size="sm" variant="outline" onClick={() => { store.setSettings({ programSkipped: [] }); toast("Sesiones saltadas restauradas", "ok"); }}>Restaurar sesiones saltadas ({(s.programSkipped || []).length})</Btn>
+          <Btn size="sm" variant="outline" icon={RefreshCw} onClick={() => { if (window.confirm("¿Restaurar el programa original de 26 semanas? Se conservan tus sesiones.")) { store.put("programs", { ...SEED_PROGRAM, startDate: data.programs[0]?.startDate || SEED_PROGRAM.startDate }); toast("Programa restaurado", "ok"); } }}>Restaurar programa</Btn>
+        </div>
       </Card>
 
       <Card title="Material">
@@ -2603,7 +3257,10 @@ function SettingsScreen() {
         {noHa && <Note>Los selectores se rellenan con tus entidades reales cuando el panel corre dentro de Home Assistant. La configuración se guarda igualmente.</Note>}
         <Toggle id="ha-enabled" label="Integración activada" hint="Publicar métricas, eventos y avisos" on={s.ha.enabled} onChange={(v) => setHa({ enabled: v })} />
         <div className="e-label">Lecturas</div>
-        <Field label="Báscula (sensor de peso)" hint="Origen de la gráfica de peso; el registro manual cubre los días sin lectura."><Select value={s.ha.scaleEntity} disabled={noHa} placeholder={noHa ? s.ha.scaleEntity || "— sin conexión —" : "— ninguna —"} options={scaleOpts.length ? scaleOpts : entityOpts("sensor")} onChange={(e) => setHa({ scaleEntity: e.target.value })} /></Field>
+        <div className="e-fields">
+          <Field label="Báscula (sensor de peso)" hint="Origen de la gráfica de peso; el manual cubre los días sin lectura."><Select value={s.ha.scaleEntity} disabled={noHa} placeholder={noHa ? s.ha.scaleEntity || "— sin conexión —" : "— ninguna —"} options={scaleOpts.length ? scaleOpts : entityOpts("sensor")} onChange={(e) => setHa({ scaleEntity: e.target.value })} /></Field>
+          <Field label="Pasos (sensor del móvil o reloj)" hint="Se muestra en Hoy frente al objetivo diario."><Select value={s.ha.stepsEntity} disabled={noHa} placeholder={noHa ? s.ha.stepsEntity || "— sin conexión —" : "— ninguno —"} options={entityOpts("sensor", (e) => /step|paso/i.test(e.name + e.id) || /steps|pasos/i.test(e.attributes?.unit_of_measurement || "")).concat([])} onChange={(e) => setHa({ stepsEntity: e.target.value })} /></Field>
+        </div>
         <div className="e-label">Publicación</div>
         <div className="e-fields">
           <Field label="Calendario (días entrenados)"><Select value={s.ha.calendarEntity} disabled={noHa} placeholder={noHa ? s.ha.calendarEntity || "— sin conexión —" : "— ninguno —"} options={entityOpts("calendar")} onChange={(e) => setHa({ calendarEntity: e.target.value })} /></Field>
@@ -2680,6 +3337,7 @@ function ProgressScreen() {
   const last = series[series.length - 1];
   const first30 = [...series].reverse().find((p) => p.date <= addDays(t, -30));
 
+  const pg = useProgram();
   const weeks = Array.from({ length: 8 }, (_, i) => { const ws = addDays(weekStart(t), -7 * (7 - i)); return { ws, we: addDays(ws, 6) }; });
   const volData = weeks.map(({ ws, we }) => {
     const v = volumeByMuscle(data.sessions, exById, ws, we);
@@ -2712,6 +3370,13 @@ function ProgressScreen() {
             <div className="e-stack"><span className="e-label">Media 7 d</span><b style={{ fontSize: 22 }}>{last ? fmtKg(last.ma) : "–"}</b></div>
             <div className="e-stack"><span className="e-label">30 días</span><b style={{ fontSize: 22, color: first30 && last.ma - first30.ma < 0 ? "var(--e-ok)" : "inherit" }}>{first30 && last ? `${last.ma - first30.ma > 0 ? "+" : ""}${fmtKg(last.ma - first30.ma)}` : "–"}</b></div>
           </div>
+          {pg && last && (() => { const start = pg.program.goals.startKg || 116, tgt = pg.program.goals.targetKg, ms = pg.program.goals.milestoneKg; const pct = clamp((start - last.ma) / (start - tgt), 0, 1); return (
+            <div className="e-col" style={{ gap: 6 }}>
+              <div className="e-row between"><span className="e-muted">Camino a {tgt} kg</span><b>{fmtKg(Math.max(0, last.ma - tgt))} kg por delante</b></div>
+              <div className="e-bar" style={{ height: 10 }}><i style={{ width: `${pct * 100}%`, background: "var(--e-ok)" }} /></div>
+              <div className="e-row between" style={{ fontSize: 11, color: "var(--e-text2)" }}><span>{start} kg inicio</span><span>hito 26 sem: {ms} kg</span><span>{tgt} kg</span></div>
+            </div>
+          ); })()}
           <Segmented options={[{ value: 30, label: "30 d" }, { value: 90, label: "90 d" }, { value: 365, label: "1 año" }]} value={range} onChange={setRange} />
           <div className="e-chart tall">
             {wSeries.length > 1 ? (
@@ -2723,6 +3388,7 @@ function ProgressScreen() {
                   <Tooltip content={<ChartTip fmt={(v) => `${fmtKg(v)} kg`} />} />
                   <Line type="monotone" dataKey="kg" name="Peso" stroke="var(--e-text2)" strokeWidth={1} dot={{ r: 2.5, fill: "var(--e-text2)", strokeWidth: 0 }} isAnimationActive={false} />
                   <Line type="monotone" dataKey="ma" name="Media 7 días" stroke="var(--e-acc)" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} isAnimationActive={false} />
+                  {pg && <ReferenceLine y={pg.program.goals.milestoneKg} stroke="var(--e-ok)" strokeDasharray="4 4" label={{ value: `hito ${pg.program.goals.milestoneKg} kg`, fill: "var(--e-ok)", fontSize: 11, position: "insideBottomRight" }} />}
                 </LineChart>
               </ResponsiveContainer>
             ) : <Empty icon={Scale}>Registra tu peso para ver la evolución.</Empty>}
@@ -2805,7 +3471,7 @@ function App() {
   useEffect(() => { mainRef.current?.scrollTo?.({ top: 0 }); }, [nav.tab, nav.view]);
   const { data } = useStore();
   // Entidades que la app observa en hass para re-renderizar solo cuando cambian.
-  const watch = useMemo(() => [data.settings.ha.scaleEntity, ...Object.values(data.settings.ha.helpers)], [data.settings.ha]);
+  const watch = useMemo(() => [data.settings.ha.scaleEntity, data.settings.ha.stepsEntity, ...Object.values(data.settings.ha.helpers)], [data.settings.ha]);
   useHA(watch);
   const active = data.sessions.find((s) => !s.finishedAt);
   return (
@@ -2861,4 +3527,4 @@ class EntrenoPanel extends HTMLElement {
 }
 if (typeof customElements !== "undefined" && !customElements.get("entreno-panel")) customElements.define("entreno-panel", EntrenoPanel);
 
-export { EntrenoPanel, loadsFor, enumerateLoads, validateLoad, suggestProgression, epley };
+export { EntrenoPanel, loadsFor, enumerateLoads, validateLoad, suggestProgression, epley, Figure, EXERCISE_FIGURES, SEED_EXERCISES, MuscleMap };

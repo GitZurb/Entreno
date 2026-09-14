@@ -31,6 +31,23 @@ comidas y 30 días de peso. Fuera de Home Assistant `hass` es nulo y la
 integración queda inactiva; la pantalla de Ajustes → Home Assistant ya está
 construida y se rellena con entidades reales cuando el panel corre dentro de HA.
 
+## Programa de 26 semanas
+
+`SEED_PROGRAM` en `src/App.jsx` define cinco bloques (Base y técnica, Acumulación,
+Intensificación, Consolidación y densidad, Cierre y test) con cinco días por semana,
+modificadores por semana (series extra y RIR objetivo, descarga en la sexta) y cinco
+fases de alimentación. El motor (`programPlanFor`, `programStatus`) calcula el plan
+concreto de cada semana y el estado de las 130 sesiones; una sesión no hecha se
+desplaza al siguiente día de entreno o se salta desde la vista Programa. Restricciones
+incorporadas: rodilla sensible (pierna con poca carga, tempo y pausas), sin ayudante
+(press con mancuernas y press de suelo) y 10.000 pasos diarios.
+
+## Ilustraciones
+
+Cada ejercicio tiene un pictograma vectorial propio (`EXERCISE_FIGURES`): una figura de
+perfil parametrizada por ángulos con dos fotogramas, inicio y final, más una silueta
+con los músculos implicados. Todo va dentro del bundle, sin imágenes externas.
+
 ## Fase 2 · panel de Home Assistant (pendiente de visto bueno)
 
 El mismo bundle `dist/panel.js` se copia a `config/www/entrenador/panel.js` y se
