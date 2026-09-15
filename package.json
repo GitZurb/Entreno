@@ -1,6 +1,6 @@
 {
   "name": "entreno",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Entrenador personal para un solo usuario, integrable como panel_custom de Home Assistant",
   "type": "module",

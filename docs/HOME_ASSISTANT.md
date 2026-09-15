@@ -16,16 +16,20 @@ Instalado y funcionando en la instancia (Home Assistant 2026.9.2), todo por MCP:
 | Helper proteína restante | `input_number.entreno_proteina_restante` · g · 0–400 · paso 1 |
 | Báscula | `sensor.withings_peso` |
 | Lista de la compra | `todo.lista_de_la_compra` |
+| Calendario de entrenos | `calendar.entrenos` (Calendario local, creado por MCP) |
 | Aviso de descanso | `notify.mobile_app_movil` |
 
 No hay que copiar ficheros, editar `configuration.yaml` ni reiniciar. Tras
 instalar o actualizar basta con recargar la página del navegador (y vaciar la
 caché del sitio en la app móvil la primera vez).
 
+El calendario se elige en Ajustes → Home Assistant → Calendario. Con él puesto,
+la vista Programa ofrece **Publicar**, que vuelca las 130 sesiones del plan como
+eventos de día completo, con los ejercicios y el RIR del día en la descripción.
+Al cerrar cada sesión se añade además el evento real de lo entrenado.
+
 Sin configurar por no existir entidades de ese tipo en la instancia:
 
-- **Calendario de días entrenados**: no hay ninguna entidad `calendar`. Si
-  añades una (Calendario local, Google), se elige en Ajustes → Home Assistant.
 - **Pasos diarios**: no hay sensor de pasos. La app companion del móvil puede
   exponerlo en Ajustes → Compañero → Sensores → Pasos.
 - **Escenas de inicio y cierre**: hay escenas de Hue disponibles, pero cuál usar

@@ -67,6 +67,16 @@ primitivas de interfaz → pantallas → elemento personalizado.
   cada semana concreta se **derivan** aplicando el modificador de la semana
   dentro del bloque. `programStatus` cruza las sesiones cerradas con el
   calendario para decidir qué toca hoy y qué quedó atrasado.
+  Los cinco días **no son consecutivos**: `dayOffsets` dice cuántos días
+  después del lunes cae cada uno (`[0, 1, 2, 4, 6]` → lunes push, martes pull,
+  miércoles full body de fuerza, viernes torso mixto y domingo full body
+  metabólico). Todo lo que calcule fechas pasa por `programDateOf`; no vuelvas
+  a sumar el índice del día directamente.
+  Cambiar de plan exige **migración**: `normalize()` solo siembra `SEED_PROGRAM`
+  cuando no hay ninguno guardado, así que `migratePrograms()` sustituye el plan
+  viejo conservando su `startDate`, y `StoreProvider` persiste el cambio en
+  IndexedDB. Sin ese borrado, el plan viejo reaparece en cuanto se edita el
+  nuevo y acabas con dos programas.
 - **Gráficas**: SVG propio, sin librería (`LineChart`, `StackedBars`,
   `Sparkline`). Se escribieron para bajar el bundle de 817 kB a 222 kB. No
   vuelvas a meter una librería de gráficas sin una razón de peso.

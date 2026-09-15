@@ -47,14 +47,32 @@ construida y se rellena con entidades reales cuando el panel corre dentro de HA.
 
 ## Programa de 26 semanas
 
-`SEED_PROGRAM` en `src/App.jsx` define cinco bloques (Base y técnica, Acumulación,
-Intensificación, Consolidación y densidad, Cierre y test) con cinco días por semana,
-modificadores por semana (series extra y RIR objetivo, descarga en la sexta) y cinco
-fases de alimentación. El motor (`programPlanFor`, `programStatus`) calcula el plan
+`SEED_PROGRAM` en `src/App.jsx` define seis meses de entrenamiento en cinco
+bloques —Calibración y base, Acumulación, Fuerza escalonada, Densidad, y Pico y
+test— sobre cinco días fijos de la semana: **lunes push, martes pull, miércoles
+full body de fuerza, viernes torso mixto y domingo full body metabólico**
+(`dayOffsets: [0, 1, 2, 4, 6]`). Jueves y sábado son de descanso activo.
+
+La semana 1 es de **calibración**: el plan no trae kilos escritos. Se busca el
+peso que deje 3 repeticiones en recámara y de ahí sale la progresión, que es
+escalonada y siempre dentro de las cargas realmente montables con el material
+del usuario: saltos de 3 kg en barra (20 · 23 · 26 · 30 …) y una escalera
+mucho más basta en mancuernas (5 · 12 · 15 · 22 · 25 · 32 · 35 por mancuerna,
+porque los discos van de cuatro en cuatro). Cuando el escalón que toca es de
+7 kg, se progresa con repeticiones y series en vez de forzar el salto.
+
+Los modificadores por semana (`MODS_BASE`, `MODS_6`, `MODS_TEST`) añaden series
+y bajan el RIR dentro de cada bloque, con descarga en la última semana de los
+bloques largos. El motor (`programPlanFor`, `programStatus`) calcula el plan
 concreto de cada semana y el estado de las 130 sesiones; una sesión no hecha se
-desplaza al siguiente día de entreno o se salta desde la vista Programa. Restricciones
-incorporadas: rodilla sensible (pierna con poca carga, tempo y pausas), sin ayudante
-(press con mancuernas y press de suelo) y 10.000 pasos diarios.
+desplaza o se salta desde la vista Programa. Restricciones incorporadas: rodilla
+sensible (pierna por tempo, pausas y unilateral, no por kilos), sin ayudante
+(empuje pesado con mancuernas y press de suelo), sesiones de ~60 min y déficit
+calórico por fases.
+
+Desde la vista Programa, **Publicar** vuelca las 130 sesiones al calendario de
+Home Assistant como eventos de día completo, con los ejercicios y el RIR
+objetivo del día en la descripción.
 
 ## Ilustraciones
 

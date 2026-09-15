@@ -952,7 +952,7 @@ const DEFAULT_SETTINGS = {
   key: "app",
   barbellKg: 20, dumbbellBarKg: 2, restDefaultSec: 90,
   activeRoutineId: "rt_torso_pierna",
-  activeProgramId: "pg_26", programGoals: true, programSkipped: [],
+  activeProgramId: "pg_ppl26", programGoals: true, programSkipped: [],
   profile: { heightCm: 173, daysPerWeek: 5, level: "intermedio", goal: "Pérdida de grasa" },
   goals: { kcal: 2200, protein: 190, carbs: 210, fat: 65, waterMl: 3000 },
   ha: {
@@ -1295,19 +1295,39 @@ function beep() {
  * ========================================================================== */
 const PB = (exerciseId, sets, repsMin, repsMax, restSec, note) => ({ exerciseId, sets, repsMin, repsMax, restSec, note: note || "" });
 // Modificadores por semana dentro de un bloque de 6: series extra en los ejercicios principales y RIR objetivo.
-const WEEK_MODS_6 = [
-  { sets: 0, rir: 3, label: "Aterrizaje" }, { sets: 0, rir: 2, label: "Ajuste" }, { sets: 0, rir: 2, label: "Carga" },
-  { sets: 1, rir: 1, label: "Carga +" }, { sets: 1, rir: 1, label: "Pico" }, { sets: -1, rir: 4, label: "Descarga", deload: true },
+// Modificadores por semana dentro de un bloque: series extra en los cuatro
+// primeros ejercicios de cada día y RIR objetivo. La progresión es escalonada:
+// primero se sube de repeticiones dentro del rango, después de series, y solo
+// cuando el rango se completa con el RIR objetivo se sube un escalón de peso.
+const MODS_BASE = [
+  { sets: 0, rir: 3, label: "Calibración" }, { sets: 0, rir: 3, label: "Ajuste" },
+  { sets: 0, rir: 2, label: "Carga" }, { sets: 1, rir: 2, label: "Carga +" },
 ];
+const MODS_6 = [
+  { sets: 0, rir: 3, label: "Entrada" }, { sets: 0, rir: 2, label: "Carga" }, { sets: 1, rir: 2, label: "Carga +" },
+  { sets: 1, rir: 1, label: "Pico" }, { sets: 1, rir: 1, label: "Pico +" }, { sets: -1, rir: 4, label: "Descarga", deload: true },
+];
+const MODS_TEST = [
+  { sets: 1, rir: 2, label: "Carga" }, { sets: 1, rir: 1, label: "Pico" },
+  { sets: 0, rir: 1, label: "Pico +" }, { sets: -1, rir: 1, label: "Test de marcas" },
+];
+
 const SEED_PROGRAM = {
-  id: "pg_26", name: "Programa 26 semanas · pérdida de grasa", startDate: "2026-09-21", weeks: 26,
+  id: "pg_ppl26", name: "Push · Pull · Full body · 26 semanas", startDate: "2026-09-21", weeks: 26,
+  // Lunes, martes, miércoles, viernes y domingo: desplazamiento en días desde el
+  // lunes de cada semana del programa.
+  dayOffsets: [0, 1, 2, 4, 6],
   goals: { startKg: 116, targetKg: 80, milestoneKg: 96, stepsPerDay: 10000, sessionMinutes: 60 },
   rules: [
+    "Semana 1 de calibración: no hay kilos escritos en el plan. En cada ejercicio busca el peso que te deje 3 repeticiones en recámara al final de la serie. Ese peso es tu punto de partida y de ahí sale toda la progresión.",
+    "Escalera de la barra (20 kg): 20 · 23 · 26 · 30 · 33 · 36 · 40 · 43 · 46 · 50 · 53 · 56 · 60 · 63 · 66 · 70 · 73 · 76 · 80 · 83 · 86. El salto siempre es de 3 kg, un disco de 1,5 por lado.",
+    "Escalera de las mancuernas (por mancuerna): 5 · 12 · 15 · 22 · 25 · 32 · 35. Los discos van de cuatro en cuatro, así que entre 5 y 12 no hay nada: ahí se progresa con repeticiones, series y tempo, nunca forzando el salto.",
+    "Progresión doble: cuando todas las series lleguen al tope del rango con el RIR objetivo, sube un escalón de peso y vuelve al mínimo del rango. Si el escalón que toca es de 7 kg, quédate en el peso y añade una serie.",
+    "Barra y mancuernas comparten discos: lo que montes en una deja de estar disponible en la otra. La app solo te deja registrar pesos montables en ese momento.",
     "Rodilla: nada de dolor durante la serie. Recorrido solo hasta donde no moleste, bajada en 3 s y sin rebotes. La pierna progresa por tempo, pausas y unilateral, no por kilos.",
-    "Sin ayudante: el press pesado se hace con mancuernas o en el suelo con barra. En press de banca con barra nunca menos de 2 RIR.",
-    "Progresión doble: cuando todas las series lleguen al tope de repeticiones con el RIR objetivo, sube al siguiente peso montable (3 kg). Si el salto es mayor, añade repeticiones o una serie.",
-    "Descarga en la sexta semana de cada bloque: una serie menos, RIR 4 y un 10 % menos de carga.",
-    "10.000 pasos diarios todos los días, entrenes o no. Es la mitad del resultado.",
+    "Sin ayudante: todo el empuje pesado es con mancuernas o press de suelo. Nunca llegues al fallo con la barra encima.",
+    "Descarga en la última semana de los bloques largos: una serie menos, RIR 4 y un 10 % menos de carga.",
+    "10.000 pasos diarios entrenes o no. Jueves y sábado son de descanso activo: caminar.",
   ],
   nutrition: [
     { weeks: [1, 8], label: "Déficit 1", kcal: 2200, protein: 195, carbs: 210, fat: 65 },
@@ -1318,70 +1338,68 @@ const SEED_PROGRAM = {
   ],
   blocks: [
     {
-      id: "b1", name: "Base y técnica", weeks: [1, 6], color: "#4F8CFF", mods: WEEK_MODS_6,
-      params: "3 series · 10–15 reps · RIR 3→1 · pierna a tempo 3-1-1 · descanso 90 s",
-      focus: "Aprender el patrón de cada ejercicio con tu material, acostumbrar la rodilla a cargas suaves y construir el hábito de cinco días.",
+      id: "b1", name: "Calibración y base", weeks: [1, 4], color: "#4F8CFF", mods: MODS_BASE,
+      params: "3 series · 10–15 reps · RIR 3→2 · descanso 90 s",
+      focus: "Encontrar tu peso en cada ejercicio y asentar los cinco días. La semana 1 es de calibración: se anota lo que mueves, no se busca récord.",
       days: [
-        { name: "Torso A", focus: "empuje y tracción horizontal", blocks: [PB("press_mancuernas", 3, 10, 12, 90), PB("remo_apoyado", 3, 10, 12, 90), PB("press_hombro_mancuernas", 3, 10, 12, 90), PB("remo_mancuerna", 3, 10, 12, 75), PB("curl_alterno", 2, 12, 15, 60), PB("press_frances", 2, 12, 15, 60), PB("plancha", 2, 30, 45, 45, "segundos")] },
-        { name: "Pierna A", focus: "cadera y rodilla amable", blocks: [PB("sentadilla_banco", 3, 10, 12, 120, "tempo 3-1-1, banco alto"), PB("rdl_mancuernas", 3, 10, 12, 120), PB("hip_thrust", 3, 12, 15, 90), PB("step_up", 2, 10, 12, 90, "banco bajo o escalón"), PB("gemelo_pie", 3, 15, 20, 60), PB("sentadilla_pared", 2, 30, 45, 60, "segundos, ángulo sin dolor")] },
-        { name: "Torso B", focus: "hombro y espalda alta", blocks: [PB("press_suelo", 3, 8, 12, 120), PB("remo_barra", 3, 10, 12, 90), PB("press_inclinado_mancuernas", 3, 10, 12, 90), PB("pajaros", 3, 12, 15, 60), PB("elevaciones_laterales", 3, 15, 20, 60), PB("curl_martillo", 2, 12, 15, 60), PB("fondos_banco", 2, 10, 15, 60, "pies en el suelo")] },
-        { name: "Pierna B", focus: "bisagra y unilateral", blocks: [PB("peso_muerto_rumano", 3, 10, 12, 120, "tempo 3-1-1"), PB("puente_gluteo_una_pierna", 3, 12, 15, 60), PB("sentadilla_goblet", 3, 12, 15, 90, "solo rango sin dolor"), PB("pm_una_pierna", 2, 10, 12, 75), PB("gemelo_una_pierna", 3, 12, 15, 60), PB("dead_bug", 2, 10, 12, 45)] },
-        { name: "Cuerpo completo", focus: "acondicionamiento", blocks: [PB("swing_kb", 4, 15, 20, 60), PB("flexiones", 3, 10, 15, 60), PB("remo_kettlebell", 3, 12, 15, 60), PB("sentadilla_mancuernas", 3, 12, 15, 90, "ligera, tempo 3-1-1"), PB("paseo_granjero", 3, 30, 40, 75, "metros"), PB("russian_twist", 3, 15, 20, 45)] },
+        { name: "Push", focus: "pecho, hombro y tríceps", blocks: [PB("press_mancuernas", 3, 10, 12, 90, "semana 1: busca el peso que te deje 3 en recámara"), PB("press_inclinado_mancuernas", 3, 10, 12, 90), PB("press_hombro_mancuernas", 3, 10, 12, 90), PB("elevaciones_laterales", 3, 15, 20, 60), PB("fondos_banco", 2, 10, 15, 60, "pies en el suelo"), PB("press_frances", 2, 12, 15, 60), PB("plancha", 2, 30, 45, 45, "segundos")] },
+        { name: "Pull", focus: "espalda, dorsal y bíceps", blocks: [PB("remo_barra", 3, 10, 12, 90), PB("remo_apoyado", 3, 10, 12, 90), PB("pullover", 3, 12, 15, 75, "recorrido corto, sin arquear"), PB("pajaros", 3, 12, 15, 60), PB("curl_alterno", 3, 12, 15, 60), PB("curl_martillo", 2, 12, 15, 60), PB("superman", 2, 12, 15, 45)] },
+        { name: "Full body fuerza", focus: "básicos con descansos largos", blocks: [PB("press_suelo", 3, 8, 10, 120), PB("peso_muerto_rumano", 3, 8, 10, 120, "tempo 3-1-1"), PB("remo_barra", 3, 8, 10, 120), PB("hip_thrust", 3, 10, 12, 90), PB("press_militar", 3, 8, 10, 90), PB("paseo_granjero", 3, 30, 40, 75, "metros")] },
+        { name: "Torso mixto", focus: "empuje y tracción alternados", blocks: [PB("press_inclinado_mancuernas", 3, 10, 12, 90), PB("remo_mancuerna", 3, 10, 12, 90), PB("press_arnold", 3, 10, 12, 75), PB("remo_apoyado", 3, 12, 15, 75), PB("elevaciones_laterales", 3, 15, 20, 60), PB("curl_inclinado", 2, 12, 15, 60), PB("extension_triceps_mancuerna", 2, 12, 15, 60)] },
+        { name: "Full body metabólico", focus: "circuito y core", blocks: [PB("swing_kb", 4, 15, 20, 60), PB("sentadilla_goblet", 3, 12, 15, 90, "solo rango sin dolor"), PB("flexiones", 3, 10, 15, 60), PB("remo_kettlebell", 3, 12, 15, 60), PB("step_up", 3, 10, 12, 75, "escalón bajo"), PB("russian_twist", 3, 15, 20, 45), PB("plancha_lateral", 2, 30, 40, 45, "segundos por lado")] },
       ],
     },
     {
-      id: "b2", name: "Acumulación", weeks: [7, 12], color: "#1F9E8B", mods: WEEK_MODS_6,
-      params: "3–4 series · 8–12 reps · RIR 2→1 · descanso 90–120 s",
-      focus: "Más volumen en torso con los básicos que puedes hacer seguro. En pierna, más series con la misma carga y pausas.",
+      id: "b2", name: "Acumulación", weeks: [5, 10], color: "#1F9E8B", mods: MODS_6,
+      params: "3–4 series · 8–12 reps · RIR 3→1 · descanso 90–120 s",
+      focus: "Más series con el peso que calibraste. Es el bloque donde deberían caer los primeros escalones de kilos en barra.",
       days: [
-        { name: "Torso A", focus: "básicos de empuje y tracción", blocks: [PB("press_mancuernas", 4, 8, 12, 120), PB("remo_barra", 4, 8, 12, 120), PB("press_militar", 3, 8, 10, 120, "carga moderada, limpia la barra"), PB("remo_mancuerna", 3, 10, 12, 75), PB("curl_barra", 3, 10, 12, 60), PB("extension_triceps_mancuerna", 3, 10, 12, 60)] },
-        { name: "Pierna A", focus: "cadera dominante", blocks: [PB("sentadilla_banco", 4, 10, 12, 120, "pausa 1 s en el banco"), PB("hip_thrust", 4, 10, 12, 90, "pausa 2 s arriba"), PB("rdl_mancuernas", 3, 10, 12, 120), PB("step_up", 3, 10, 12, 90), PB("gemelo_pie", 4, 12, 15, 60), PB("elevacion_piernas_banco", 3, 10, 15, 45)] },
-        { name: "Torso B", focus: "hombro y espalda alta", blocks: [PB("press_suelo", 4, 6, 10, 150), PB("remo_apoyado", 4, 10, 12, 90), PB("press_inclinado_mancuernas", 3, 8, 12, 90), PB("pajaros", 3, 12, 15, 60), PB("elevaciones_laterales", 4, 12, 20, 60), PB("curl_inclinado", 3, 10, 12, 60)] },
-        { name: "Pierna B", focus: "bisagra pesada y unilateral", blocks: [PB("peso_muerto", 3, 6, 8, 180, "carga moderada, espalda neutra"), PB("puente_gluteo_una_pierna", 3, 12, 15, 60), PB("sentadilla_goblet", 3, 12, 15, 90, "rango sin dolor"), PB("pm_una_pierna", 3, 10, 12, 75), PB("curl_nordico", 2, 4, 6, 120, "asistido con manos"), PB("gemelo_una_pierna", 3, 12, 15, 60)] },
-        { name: "Cuerpo completo", focus: "acondicionamiento", blocks: [PB("swing_kb", 5, 15, 20, 60), PB("flexiones_declinadas", 3, 8, 12, 60), PB("remo_kettlebell", 3, 12, 15, 60), PB("sentadilla_mancuernas", 3, 12, 15, 90, "ligera"), PB("paseo_granjero", 4, 30, 40, 75, "metros"), PB("plancha_lateral", 3, 30, 40, 45, "segundos por lado")] },
+        { name: "Push", focus: "volumen de empuje", blocks: [PB("press_mancuernas", 4, 8, 12, 120), PB("press_inclinado_mancuernas", 3, 8, 12, 90), PB("press_hombro_mancuernas", 4, 8, 10, 90), PB("aperturas", 3, 12, 15, 60, "recorrido controlado"), PB("elevaciones_laterales", 4, 12, 20, 60), PB("press_frances", 3, 8, 12, 75), PB("patada_triceps", 2, 12, 15, 45)] },
+        { name: "Pull", focus: "volumen de tracción", blocks: [PB("remo_barra", 4, 8, 12, 120), PB("remo_apoyado", 4, 10, 12, 90), PB("pullover", 3, 10, 12, 75), PB("encogimientos", 3, 12, 15, 60), PB("pajaros", 3, 12, 15, 60), PB("curl_barra", 3, 10, 12, 60), PB("curl_martillo", 3, 10, 12, 60)] },
+        { name: "Full body fuerza", focus: "básicos pesados", blocks: [PB("press_suelo", 4, 6, 10, 150), PB("peso_muerto", 3, 6, 8, 180, "espalda neutra, sin rebote"), PB("remo_barra", 4, 8, 10, 120), PB("hip_thrust", 4, 10, 12, 90, "pausa 2 s arriba"), PB("press_militar", 3, 8, 10, 120), PB("gemelo_pie", 3, 12, 15, 60)] },
+        { name: "Torso mixto", focus: "empuje y tracción alternados", blocks: [PB("press_inclinado_mancuernas", 4, 8, 12, 90), PB("remo_mancuerna", 4, 8, 12, 75), PB("press_arnold", 3, 8, 12, 75), PB("remo_kettlebell", 3, 10, 12, 60), PB("elevaciones_laterales", 4, 12, 15, 60), PB("curl_concentrado", 3, 10, 12, 45), PB("extension_triceps_mancuerna", 3, 10, 12, 45)] },
+        { name: "Full body metabólico", focus: "circuito y gasto", blocks: [PB("swing_kb", 5, 15, 20, 60), PB("sentadilla_banco", 3, 10, 12, 90, "pausa 1 s en el banco"), PB("flexiones_declinadas", 3, 8, 12, 60), PB("rdl_mancuernas", 3, 10, 12, 90), PB("paseo_granjero", 4, 30, 40, 75, "metros"), PB("crunch_declinado", 3, 12, 15, 45)] },
       ],
     },
     {
-      id: "b3", name: "Intensificación", weeks: [13, 18], color: "#8A5FE6", mods: WEEK_MODS_6,
-      params: "4 series · 6–10 reps en torso · pierna 8–12 con pausas · RIR 2→1 · descanso 120–150 s",
-      focus: "Cargas más altas en torso. La pierna sigue con poca carga pero más difícil: pausas de 2 s, tempo lento y más lastre en unilateral.",
+      id: "b3", name: "Fuerza escalonada", weeks: [11, 16], color: "#8A5FE6", mods: MODS_6,
+      params: "4 series · 5–10 reps en básicos · RIR 3→1 · descanso 120–180 s",
+      focus: "Rangos más cortos y descansos más largos: aquí es donde se suben escalones de peso en barra. En mancuernas, si el salto es de 7 kg, se queda y sube de series.",
       days: [
-        { name: "Torso A", focus: "fuerza de empuje y tracción", blocks: [PB("press_mancuernas", 4, 6, 10, 150), PB("remo_barra", 4, 6, 8, 150), PB("press_hombro_mancuernas", 4, 6, 10, 120), PB("remo_mancuerna", 3, 8, 10, 90), PB("curl_barra", 3, 8, 10, 60), PB("press_frances", 3, 8, 10, 60)] },
-        { name: "Pierna A", focus: "pausas y tempo", blocks: [PB("sentadilla_banco", 4, 10, 12, 120, "pausa 2 s, banco más bajo si no duele"), PB("hip_thrust", 4, 8, 10, 120, "pausa 2 s arriba"), PB("rdl_mancuernas", 4, 8, 10, 120), PB("step_up", 3, 8, 10, 90), PB("gemelo_pie", 4, 10, 12, 60), PB("sentadilla_pared", 3, 45, 60, 60, "segundos")] },
-        { name: "Torso B", focus: "hombro y espalda alta", blocks: [PB("press_suelo", 4, 5, 8, 150), PB("remo_apoyado", 4, 8, 10, 90), PB("press_inclinado_mancuernas", 4, 6, 10, 120), PB("remo_menton", 3, 10, 12, 60), PB("elevaciones_laterales", 4, 12, 15, 60), PB("curl_martillo", 3, 8, 10, 60), PB("extension_triceps_mancuerna", 3, 8, 10, 60)] },
-        { name: "Pierna B", focus: "bisagra fuerte", blocks: [PB("peso_muerto_rumano", 4, 6, 8, 150), PB("puente_gluteo_una_pierna", 3, 10, 12, 60, "con disco"), PB("sentadilla_goblet", 3, 10, 12, 90, "tempo 3-1-1"), PB("pm_una_pierna", 3, 8, 10, 75), PB("curl_nordico", 3, 4, 6, 120), PB("gemelo_una_pierna", 3, 10, 12, 60)] },
-        { name: "Cuerpo completo", focus: "densidad", blocks: [PB("swing_kb", 5, 20, 20, 60), PB("flexiones", 4, 10, 20, 60, "máximas con 1 RIR"), PB("remo_kettlebell", 4, 10, 12, 60), PB("sentadilla_mancuernas", 3, 10, 12, 90), PB("paseo_granjero", 4, 40, 40, 75, "metros"), PB("crunch_declinado", 3, 12, 15, 45)] },
+        { name: "Push", focus: "fuerza de empuje", blocks: [PB("press_mancuernas", 4, 6, 10, 150), PB("press_suelo", 4, 5, 8, 150), PB("press_hombro_mancuernas", 4, 6, 10, 120), PB("press_inclinado_mancuernas", 3, 8, 10, 90), PB("elevaciones_laterales", 4, 12, 15, 60), PB("press_frances", 3, 8, 10, 60)] },
+        { name: "Pull", focus: "fuerza de tracción", blocks: [PB("remo_barra", 4, 6, 8, 150), PB("remo_mancuerna", 4, 8, 10, 90), PB("peso_muerto", 3, 5, 6, 180), PB("encogimientos", 3, 10, 12, 60), PB("pajaros", 3, 12, 15, 60), PB("curl_barra", 3, 8, 10, 60)] },
+        { name: "Full body fuerza", focus: "los cinco patrones", blocks: [PB("press_suelo", 4, 5, 8, 150), PB("peso_muerto_rumano", 4, 6, 8, 150), PB("remo_apoyado", 4, 8, 10, 90), PB("hip_thrust", 4, 8, 10, 120, "pausa 2 s arriba"), PB("press_militar", 4, 6, 8, 120), PB("sentadilla_pared", 3, 45, 60, 60, "segundos, ángulo sin dolor")] },
+        { name: "Torso mixto", focus: "empuje y tracción pesados", blocks: [PB("press_inclinado_mancuernas", 4, 6, 10, 120), PB("remo_barra", 4, 8, 10, 120), PB("press_arnold", 3, 8, 10, 90), PB("remo_apoyado", 3, 10, 12, 75), PB("curl_inclinado", 3, 8, 10, 60), PB("extension_triceps_mancuerna", 3, 8, 10, 60)] },
+        { name: "Full body metabólico", focus: "densidad y core", blocks: [PB("swing_kb", 5, 20, 20, 60), PB("sentadilla_goblet", 3, 10, 12, 90, "tempo 3-1-1"), PB("flexiones", 4, 10, 20, 60, "máximas con 1 en recámara"), PB("remo_kettlebell", 4, 10, 12, 60), PB("pm_una_pierna", 3, 8, 10, 75), PB("plancha", 3, 45, 60, 45, "segundos")] },
       ],
     },
     {
-      id: "b4", name: "Consolidación y densidad", weeks: [19, 24], color: "#C9731F", mods: WEEK_MODS_6,
-      params: "3–4 series · 8–12 reps · descansos de 60–75 s · unilateral · RIR 2→1",
-      focus: "Mismo trabajo en menos tiempo: descansos cortos, más ejercicios a una mano y una pierna. Máximo gasto calórico sin castigar la rodilla.",
+      id: "b4", name: "Densidad", weeks: [17, 22], color: "#C9731F", mods: MODS_6,
+      params: "3–4 series · 8–15 reps · descansos de 45–75 s · RIR 3→1",
+      focus: "El mismo trabajo en menos tiempo: descansos cortos y más unilateral. Máximo gasto con el déficit ya apretado, sin castigar la rodilla.",
       days: [
-        { name: "Torso A", focus: "unilateral y densidad", blocks: [PB("press_inclinado_mancuernas", 4, 8, 12, 75), PB("remo_mancuerna", 4, 8, 12, 60), PB("press_arnold", 3, 10, 12, 75), PB("remo_apoyado", 3, 10, 12, 60), PB("curl_concentrado", 3, 10, 12, 45), PB("patada_triceps", 3, 12, 15, 45)] },
-        { name: "Pierna A", focus: "cadera y unilateral", blocks: [PB("sentadilla_banco", 4, 12, 15, 90, "banco más bajo si va bien"), PB("hip_thrust", 4, 10, 12, 75), PB("pm_una_pierna", 3, 10, 12, 60), PB("step_up", 3, 10, 12, 60), PB("gemelo_pie", 4, 12, 15, 45), PB("dead_bug", 3, 10, 12, 45)] },
-        { name: "Torso B", focus: "empuje pesado seguro", blocks: [PB("press_suelo", 4, 6, 8, 120), PB("remo_barra", 4, 8, 10, 90), PB("press_mancuernas", 3, 10, 12, 75), PB("pajaros", 4, 12, 15, 45), PB("elevaciones_frontales_disco", 3, 12, 15, 45), PB("curl_alterno", 3, 10, 12, 45), PB("fondos_banco", 3, 10, 15, 60)] },
-        { name: "Pierna B", focus: "bisagra pesada", blocks: [PB("peso_muerto", 4, 5, 6, 180, "moderado, técnica perfecta"), PB("puente_gluteo_una_pierna", 3, 12, 15, 60), PB("sentadilla_goblet", 3, 12, 15, 75), PB("buenos_dias", 3, 10, 12, 90, "ligero"), PB("curl_nordico", 3, 5, 6, 120), PB("gemelo_una_pierna", 3, 12, 15, 45)] },
-        { name: "Cuerpo completo", focus: "circuito", blocks: [PB("swing_kb", 6, 20, 20, 45), PB("flexiones_declinadas", 4, 8, 12, 45), PB("remo_kettlebell", 4, 12, 15, 45), PB("paseo_granjero", 5, 40, 40, 60, "metros"), PB("plancha", 3, 45, 60, 45, "segundos"), PB("russian_twist", 3, 20, 20, 45)] },
+        { name: "Push", focus: "empuje en densidad", blocks: [PB("press_inclinado_mancuernas", 4, 8, 12, 75), PB("press_arnold", 3, 10, 12, 60), PB("aperturas", 3, 12, 15, 45), PB("elevaciones_laterales", 4, 12, 15, 45), PB("fondos_banco", 3, 10, 15, 45), PB("patada_triceps", 3, 12, 15, 45)] },
+        { name: "Pull", focus: "tracción en densidad", blocks: [PB("remo_mancuerna", 4, 8, 12, 60), PB("remo_apoyado", 4, 10, 12, 60), PB("pullover", 3, 12, 15, 45), PB("encogimientos", 3, 12, 15, 45), PB("pajaros", 3, 15, 20, 45), PB("curl_concentrado", 3, 10, 12, 45)] },
+        { name: "Full body fuerza", focus: "básicos, sin perder la carga", blocks: [PB("press_suelo", 4, 6, 10, 120), PB("peso_muerto_rumano", 4, 8, 10, 120), PB("remo_barra", 4, 8, 10, 90), PB("hip_thrust", 4, 10, 12, 75), PB("press_militar", 3, 8, 10, 90), PB("gemelo_una_pierna", 3, 12, 15, 45)] },
+        { name: "Torso mixto", focus: "superserie empuje-tracción", blocks: [PB("press_mancuernas", 4, 8, 12, 75), PB("remo_kettlebell", 4, 10, 12, 60), PB("press_hombro_mancuernas", 3, 10, 12, 60), PB("remo_apoyado", 3, 12, 15, 60), PB("curl_martillo", 3, 10, 12, 45), PB("extension_triceps_mancuerna", 3, 10, 12, 45)] },
+        { name: "Full body metabólico", focus: "circuito continuo", blocks: [PB("swing_kb", 5, 20, 20, 45), PB("step_up", 3, 10, 12, 60), PB("flexiones", 4, 12, 20, 45), PB("remo_mancuerna", 3, 12, 15, 45), PB("paseo_granjero", 4, 40, 40, 60, "metros"), PB("dead_bug", 3, 10, 12, 45)] },
       ],
     },
     {
-      id: "b5", name: "Cierre y test", weeks: [25, 26], color: "#D4406A",
-      mods: [{ sets: 0, rir: 1, label: "Semana de test" }, { sets: -1, rir: 4, label: "Descarga final", deload: true }],
-      params: "Semana 25: máximas repeticiones con 1 RIR en los principales · Semana 26: descarga y medición",
-      focus: "Comprobar cuánto has mejorado respecto a la semana 1 y cerrar el ciclo descansado para empezar el siguiente.",
+      id: "b5", name: "Pico y test", weeks: [23, 26], color: "#D4406A", mods: MODS_TEST,
+      params: "3–4 series · 4–10 reps · RIR 2→1 · última semana de test",
+      focus: "Consolidar lo ganado y medirlo. La semana 26 es de test: una serie menos y RIR 1 en los básicos para ver dónde has llegado en seis meses.",
       days: [
-        { name: "Test torso A", focus: "records de repeticiones", blocks: [PB("press_mancuernas", 3, 8, 12, 150, "última serie a 1 RIR"), PB("remo_barra", 3, 8, 12, 150, "última serie a 1 RIR"), PB("press_hombro_mancuernas", 3, 8, 12, 120), PB("remo_mancuerna", 3, 10, 12, 90), PB("curl_barra", 2, 10, 12, 60), PB("press_frances", 2, 10, 12, 60)] },
-        { name: "Pierna suave", focus: "movilidad y control", blocks: [PB("sentadilla_banco", 3, 12, 15, 90), PB("hip_thrust", 3, 12, 15, 90), PB("rdl_mancuernas", 3, 10, 12, 90), PB("gemelo_pie", 3, 15, 20, 45), PB("sentadilla_pared", 2, 45, 60, 60, "segundos")] },
-        { name: "Test torso B", focus: "records de repeticiones", blocks: [PB("press_suelo", 3, 6, 10, 150, "última serie a 1 RIR"), PB("remo_apoyado", 3, 10, 12, 90), PB("press_inclinado_mancuernas", 3, 8, 12, 120), PB("elevaciones_laterales", 3, 15, 20, 45), PB("curl_martillo", 2, 10, 12, 60), PB("fondos_banco", 2, 10, 15, 60)] },
-        { name: "Pierna suave", focus: "bisagra ligera", blocks: [PB("peso_muerto_rumano", 3, 10, 12, 120), PB("puente_gluteo_una_pierna", 3, 12, 15, 60), PB("pm_una_pierna", 2, 10, 12, 60), PB("gemelo_una_pierna", 3, 12, 15, 45), PB("dead_bug", 2, 10, 12, 45)] },
-        { name: "Cuerpo completo", focus: "cierre", blocks: [PB("swing_kb", 4, 20, 20, 60), PB("flexiones", 3, 10, 20, 60, "máximas con 1 RIR"), PB("remo_kettlebell", 3, 12, 15, 60), PB("paseo_granjero", 3, 40, 40, 75, "metros"), PB("plancha", 2, 45, 60, 45, "segundos")] },
+        { name: "Push", focus: "test de empuje", blocks: [PB("press_mancuernas", 4, 6, 8, 150), PB("press_suelo", 3, 5, 8, 150), PB("press_hombro_mancuernas", 4, 6, 8, 120), PB("elevaciones_laterales", 3, 12, 15, 60), PB("press_frances", 3, 8, 10, 60)] },
+        { name: "Pull", focus: "test de tracción", blocks: [PB("remo_barra", 4, 6, 8, 150), PB("remo_mancuerna", 3, 8, 10, 90), PB("peso_muerto", 3, 4, 6, 180), PB("encogimientos", 3, 10, 12, 60), PB("curl_barra", 3, 8, 10, 60)] },
+        { name: "Full body fuerza", focus: "los básicos al tope", blocks: [PB("press_suelo", 4, 5, 6, 180), PB("peso_muerto_rumano", 4, 6, 8, 150), PB("remo_barra", 4, 6, 8, 150), PB("hip_thrust", 4, 8, 10, 120), PB("press_militar", 3, 6, 8, 120)] },
+        { name: "Torso mixto", focus: "empuje y tracción", blocks: [PB("press_inclinado_mancuernas", 4, 8, 10, 90), PB("remo_apoyado", 4, 8, 10, 90), PB("press_arnold", 3, 8, 10, 75), PB("curl_martillo", 3, 10, 12, 60), PB("extension_triceps_mancuerna", 3, 10, 12, 60)] },
+        { name: "Full body metabólico", focus: "cierre", blocks: [PB("swing_kb", 5, 20, 20, 60), PB("sentadilla_goblet", 3, 10, 12, 90), PB("flexiones", 3, 15, 20, 60), PB("remo_kettlebell", 3, 12, 15, 60), PB("plancha", 3, 45, 60, 45, "segundos")] },
       ],
     },
   ],
 };
 
-// Semana del programa (1..weeks) para una fecha; 0 antes de empezar, weeks+1 al terminar.
 function programWeekOf(program, dateISO) {
   const days = Math.floor((parseISO(dateISO) - parseISO(program.startDate)) / 86400e3);
   if (days < 0) return 0;
@@ -1389,7 +1407,10 @@ function programWeekOf(program, dateISO) {
 }
 const programBlockOf = (program, week) => program.blocks.find((b) => week >= b.weeks[0] && week <= b.weeks[1]) || null;
 const programNutritionOf = (program, week) => program.nutrition.find((n) => week >= n.weeks[0] && week <= n.weeks[1]) || null;
-const programDateOf = (program, week, day) => addDays(program.startDate, (week - 1) * 7 + day);
+// Los días del programa no son consecutivos: `dayOffsets` dice cuántos días
+// después del lunes cae cada uno (lun, mar, mié, vie, dom).
+const programDayOffset = (program, day) => program.dayOffsets?.[day] ?? day;
+const programDateOf = (program, week, day) => addDays(program.startDate, (week - 1) * 7 + programDayOffset(program, day));
 
 // Plan concreto de una semana: bloque, modificador y días con series/RIR ajustados.
 function programPlanFor(program, week) {
@@ -1463,18 +1484,36 @@ function buildSeed() {
     diary: [], bodyweight: [], haQueue: [], programs: [SEED_PROGRAM],
   };
 }
+// El plan de torso/pierna de la primera versión se sustituye por el de
+// push/pull/full body conservando la fecha de inicio que tuvieras puesta. Las
+// sesiones ya cerradas no se tocan: siguen en el historial y en el calendario.
+function migratePrograms(list) {
+  if (!list?.length) return [SEED_PROGRAM];
+  if (list.some((p) => p.id === SEED_PROGRAM.id)) return list;
+  const previo = list.find((p) => p.id === "pg_26") || list[0];
+  const resto = list.filter((p) => p !== previo);
+  return [{ ...SEED_PROGRAM, startDate: previo?.startDate || SEED_PROGRAM.startDate }, ...resto];
+}
+
 function normalize(raw) {
   const settings = { ...DEFAULT_SETTINGS, ...(raw.settings?.[0] || {}) };
   settings.ha = { ...DEFAULT_SETTINGS.ha, ...(settings.ha || {}), helpers: { ...DEFAULT_SETTINGS.ha.helpers, ...(settings.ha?.helpers || {}) } };
   settings.goals = { ...DEFAULT_SETTINGS.goals, ...(settings.goals || {}) };
   settings.profile = { ...DEFAULT_SETTINGS.profile, ...(settings.profile || {}) };
   const inventory = { ...DEFAULT_INVENTORY, ...(raw.inventory?.[0] || {}) };
+  const programs = migratePrograms(raw.programs);
+  // Si el programa activo ya no existe (migración), manda el primero. Las
+  // sesiones saltadas del plan viejo se descartan: sus claves no valen aquí.
+  if (!programs.some((p) => p.id === settings.activeProgramId)) {
+    settings.activeProgramId = programs[0]?.id || "";
+    settings.programSkipped = [];
+  }
   return {
     settings, inventory,
     exercises: raw.exercises || [], routines: raw.routines || [], sessions: raw.sessions || [],
     foods: raw.foods || [], recipes: raw.recipes || [], diary: raw.diary || [],
     bodyweight: raw.bodyweight || [], haQueue: raw.haQueue || [],
-    programs: raw.programs?.length ? raw.programs : [SEED_PROGRAM],
+    programs,
   };
 }
 
@@ -1494,6 +1533,15 @@ function StoreProvider({ children }) {
         }
         const n = normalize(raw);
         if (!raw.programs?.length) await db.putMany("programs", n.programs);
+        // Migración persistida: si en el almacén sigue el plan de torso/pierna,
+        // se borra y se guarda el de push/pull/full body con la fecha de inicio
+        // que tuviera. Si no se persiste, el viejo reaparecería al editar.
+        const guardados = raw.programs || [];
+        if (guardados.length && !guardados.some((pr) => pr.id === SEED_PROGRAM.id)) {
+          for (const pr of guardados) await db.del("programs", pr.id);
+          await db.putMany("programs", n.programs);
+          await db.put("settings", n.settings);
+        }
         // Limpieza única: las primeras versiones precargaban sesiones, un día de
         // comidas, dos recetas y un mes de peso inventados. Se borran una sola vez.
         if (!n.settings.demoPurged) {
@@ -1693,6 +1741,22 @@ function useIntegration() {
         });
       }
       if (cfg.sceneEnd) await send({ domain: "scene", service: "turn_on", data: { entity_id: cfg.sceneEnd }, entity: cfg.sceneEnd, label: "Escena de cierre" });
+    },
+    // Vuelca las sesiones del programa al calendario de Home Assistant como
+    // eventos de día completo. Se corta a los tres fallos seguidos: lo que no
+    // salga se queda en la cola y se reintenta solo, como el resto de envíos.
+    async publishPlan(items) {
+      if (!cfg.calendarEntity) { toast("Elige un calendario en Ajustes → Home Assistant", "warn"); return { ok: 0, total: items.length }; }
+      let ok = 0, seguidos = 0;
+      for (const it of items) {
+        const hecho = await send({
+          domain: "calendar", service: "create_event", entity: cfg.calendarEntity, label: `Plan · ${it.date}`,
+          data: { entity_id: cfg.calendarEntity, summary: it.summary, description: it.description, start_date: it.date, end_date: addDays(it.date, 1) },
+        });
+        if (hecho) { ok++; seguidos = 0; } else if (++seguidos >= 3) break;
+      }
+      toast(ok === items.length ? `${ok} sesiones en el calendario` : `${ok} de ${items.length} enviadas; el resto queda en la cola de reintentos`, ok === items.length ? "ok" : "warn");
+      return { ok, total: items.length };
     },
     async publishProteinLeft(grams) { await setNumber(cfg.helpers.proteinLeft, Math.max(0, grams), "Proteína restante"); },
     async sendShoppingList(items) {
@@ -2990,13 +3054,39 @@ function ProgramView() {
   const pg = useProgram();
   const start = useStartProgramSession();
   const active = useActiveSession();
+  const integration = useIntegration();
   const [showWeek, setShowWeek] = useState(null);
+  const [publicando, setPublicando] = useState(false);
   if (!pg) return <div className="e-page"><Empty icon={CalendarDays}>No hay programa activo.</Empty></div>;
   const { program, week, plan, status, next, nextPlan, nextDay } = pg;
   const shownWeek = showWeek ?? (plan ? week : next?.week || 1);
   const shownPlan = programPlanFor(program, clamp(shownWeek, 1, program.weeks));
   const skip = (key) => { store.setSettings({ programSkipped: [...(data.settings.programSkipped || []), key] }); toast("Sesión saltada. El programa sigue con la siguiente.", "info"); };
   const startNow = () => { if (window.confirm("¿Adelantar el inicio del programa a esta semana? Las fechas de todas las semanas se mueven.")) store.put("programs", { ...program, startDate: weekStart(todayISO()) }); };
+
+  // Un evento de día completo por sesión pendiente, con el detalle del día en
+  // la descripción para poder leerlo desde el calendario sin abrir la app.
+  const eventosDelPlan = () => status.list.filter((x) => x.state === "pending" || x.state === "today").map((x) => {
+    const plan = programPlanFor(program, x.week);
+    const d = plan.days[x.day];
+    return {
+      date: x.date,
+      summary: `Entreno · ${d.name}`,
+      description: [
+        `Semana ${x.week} de ${program.weeks} · ${plan.block.name} · ${plan.mod.label} · RIR ${plan.mod.rir}`,
+        ...d.blocks.map((b) => `${exById[b.exerciseId]?.name || b.exerciseId}: ${b.sets} × ${b.repsMin === b.repsMax ? b.repsMin : `${b.repsMin}–${b.repsMax}`}${b.note ? ` · ${b.note}` : ""}`),
+      ].join("\n"),
+    };
+  });
+  const publicarPlan = async () => {
+    const items = eventosDelPlan();
+    if (!items.length) { toast("No quedan sesiones pendientes que publicar", "warn"); return; }
+    if (data.settings.planPublishedId === program.id && !window.confirm(`Ya publicaste este plan. Volver a hacerlo creará ${items.length} eventos duplicados en el calendario. ¿Continuar?`)) return;
+    setPublicando(true);
+    const { ok } = await integration.publishPlan(items);
+    if (ok) store.setSettings({ planPublishedId: program.id, planPublishedAt: new Date().toISOString() });
+    setPublicando(false);
+  };
   const t = todayISO();
   return (
     <div className="e-page">
@@ -3005,6 +3095,14 @@ function ProgramView() {
       {week === 0 && (
         <BubbleCard>
           <div className="e-row between wrap"><div className="e-stack"><b style={{ fontSize: 17 }}>Faltan {pg.daysToStart} días</b><span className="e-muted">Empieza el {fmtDate(program.startDate, true)}. Puedes usar estos días para probar cargas con las rutinas libres.</span></div><Btn variant="soft" icon={Play} onClick={startNow}>Empezar esta semana</Btn></div>
+        </BubbleCard>
+      )}
+
+      {integration.active && (
+        <BubbleCard icon={CalendarDays} title="Calendario de Home Assistant"
+          subtitle={data.settings.planPublishedId === program.id ? `publicado el ${fmtDate(data.settings.planPublishedAt.slice(0, 10), true)}` : `${status.list.filter((x) => x.state === "pending" || x.state === "today").length} sesiones sin publicar`}
+          action={<Btn size="sm" variant="soft" icon={Upload} disabled={publicando} onClick={publicarPlan}>{publicando ? "Enviando…" : data.settings.planPublishedId === program.id ? "Volver a publicar" : "Publicar"}</Btn>}>
+          <p className="e-muted">Crea un evento de día completo por sesión en {data.settings.ha.calendarEntity || "el calendario que elijas en Ajustes"}, con los ejercicios del día y el RIR objetivo en la descripción. Los envíos que fallen se reintentan solos.</p>
         </BubbleCard>
       )}
 
@@ -3055,7 +3153,7 @@ function ProgramView() {
             {shownPlan.days.map((d, di) => {
               const it = status.list.find((x) => x.week === shownWeek && x.day === di);
               const stKind = it?.state === "done" ? "ok" : it?.state === "missed" ? "err" : it?.state === "today" ? "acc" : "";
-              const stLabel = it?.state === "done" ? "hecha" : it?.state === "missed" ? "atrasada" : it?.state === "today" ? "hoy" : it?.state === "skipped" ? "saltada" : DAYS_ES[di];
+              const stLabel = it?.state === "done" ? "hecha" : it?.state === "missed" ? "atrasada" : it?.state === "today" ? "hoy" : it?.state === "skipped" ? "saltada" : DAYS_ES[programDayOffset(program, di)];
               return (
                 <div key={di} className="e-col" style={{ padding: "12px 16px", gap: 8 }}>
                   <div className="e-row between">
